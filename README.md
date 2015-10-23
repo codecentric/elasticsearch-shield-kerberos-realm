@@ -28,12 +28,14 @@ Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.
 * Kerberos Infrastructure (ActiveDirectory, MIT, Heimdal, ...)
 
 ###Install release
-    $ bin/plugin install http://...elasticsearch-shield-kerberos-realm-2.0.0-rc1.zip
+[Download latest release](https://github.com/codecentric/elasticsearch-shield-kerberos-realm/releases) and store it somewhere. Then execute:
+
+    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0-rc1.zip
 
 ###Build and install latest
-    $ git clone
+    $ git clone https://github.com/codecentric/elasticsearch-shield-kerberos-realm.git
     $ mvn package
-    $ bin/plugin install file:///../path/to/../elasticsearch-shield-kerberos-realm-2.0.0-rc1.zip
+    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0-rc1.zip
 
 ###Configuration
 
