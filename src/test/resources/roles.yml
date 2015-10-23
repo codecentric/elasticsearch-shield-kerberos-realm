@@ -1,0 +1,4 @@
+cc_kerberos_realm_role:
+  cluster: all
+  indices:
+    '*': all
