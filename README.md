@@ -2,7 +2,7 @@ Shield Kerberos Realm
 =====================
 
 Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.0.  
-Authenticate HTTP and Transport request via Kerberos/SPNEGO.
+Authenticate HTTP and Transport requests via Kerberos/SPNEGO.
 
 ###License
 Apache License Version 2.0
@@ -15,7 +15,7 @@ Apache License Version 2.0
 * No external dependencies
 
 ###Community support
-[E-Mail hendrikdev22@gmail.com](mailto:hendrikdev22@gmail.com)  
+[Stackoverflow](http://stackoverflow.com/questions/ask?tags=es-kerberos+elasticsearch)  
 [Twitter @hendrikdev22](https://twitter.com/hendrikdev22)
 
 ###Commercial support
