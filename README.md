@@ -30,12 +30,12 @@ Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.
 ###Install release
 [Download latest release](https://github.com/codecentric/elasticsearch-shield-kerberos-realm/releases) and store it somewhere. Then execute:
 
-    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0-rc1.zip
+    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0.zip
 
 ###Build and install latest
     $ git clone https://github.com/codecentric/elasticsearch-shield-kerberos-realm.git
     $ mvn package
-    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0-rc1.zip
+    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0.zip
 
 ###Configuration
 
