@@ -62,6 +62,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.license.plugin.LicensePlugin;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.node.PluginEnabledNode;
 import org.elasticsearch.shield.ShieldPlugin;
 import org.junit.After;
 import org.junit.Assert;
@@ -71,6 +72,9 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
+import com.google.common.collect.Lists;
+
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.EmbeddedKRBServer;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
@@ -150,7 +154,8 @@ public abstract class AbstractUnitTest {
 
         // @formatter:off
         return settingsBuilder()
-                .putArray("plugin.types", ShieldPlugin.class.getName(), LicensePlugin.class.getName(), KerberosRealmPlugin.class.getName())
+                //.putArray("plugin.types", ShieldPlugin.class.getName(), LicensePlugin.class.getName(), KerberosRealmPlugin.class.getName())
+                .putArray("plugin.mandatory",KerberosRealm.TYPE + "-realm","shield","license")
                 .put("index.queries.cache.type", "opt_out_cache").put(PREFIX + "order", 0).put(PREFIX + "type", "cc-kerberos")
                 .put("path.home", ".").put("node.name", "kerberosrealm_testnode_" + nodenum).put("node.data", dataNode)
                 .put("node.master", masterNode).put("cluster.name", clustername).put("path.data", "testtmp/data")
@@ -190,17 +195,16 @@ public abstract class AbstractUnitTest {
         //elasticsearchNodePort2 = portIt.next();
         //elasticsearchNodePort3 = portIt.next();
 
-        esNode1 = new NodeBuilder().settings(
-                getDefaultSettingsBuilder(1, 0, elasticsearchHttpPort1, false, true).put(
-                        settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build()).node();
+        esNode1 = new PluginEnabledNode(getDefaultSettingsBuilder(1, 0, elasticsearchHttpPort1, false, true).put(
+                settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build(), Lists.newArrayList(ShieldPlugin.class, LicensePlugin.class, KerberosRealmPlugin.class)).start();
         client = esNode1.client();
-        esNode2 = new NodeBuilder().settings(
-                getDefaultSettingsBuilder(2, 0, elasticsearchHttpPort2, true, true).put(
-                        settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build()).node();
-        esNode3 = new NodeBuilder().settings(
-                getDefaultSettingsBuilder(3, 0, elasticsearchHttpPort3, true, false).put(
-                        settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build()).node();
-
+        
+        esNode2 = new PluginEnabledNode(getDefaultSettingsBuilder(2, 0, elasticsearchHttpPort2, true, true).put(
+                settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build(), Lists.newArrayList(ShieldPlugin.class, LicensePlugin.class, KerberosRealmPlugin.class)).start();
+        
+        esNode3 = new PluginEnabledNode(getDefaultSettingsBuilder(3, 0, elasticsearchHttpPort3, true, false).put(
+                settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build(), Lists.newArrayList(ShieldPlugin.class, LicensePlugin.class, KerberosRealmPlugin.class)).start();
+        
         waitForGreenClusterState();
         final NodesInfoResponse nodeInfos = client().admin().cluster().prepareNodesInfo().get();
         final NodeInfo[] nodes = nodeInfos.getNodes();

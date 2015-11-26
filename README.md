@@ -1,7 +1,7 @@
 Shield Kerberos Realm
 =====================
 
-Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.0.  
+Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.1.  
 Authenticate HTTP and Transport requests via Kerberos/SPNEGO.
 
 ###License
@@ -23,19 +23,19 @@ Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.
 
 ###Prerequisites
 
-* Elasticsearch 2.0
-* Shield Plugin 2.0
+* Elasticsearch 2.1
+* Shield Plugin 2.1
 * Kerberos Infrastructure (ActiveDirectory, MIT, Heimdal, ...)
 
 ###Install release
 [Download latest release](https://github.com/codecentric/elasticsearch-shield-kerberos-realm/releases) and store it somewhere. Then execute:
 
-    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0.zip
+    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.1.0.zip
 
 ###Build and install latest
     $ git clone https://github.com/codecentric/elasticsearch-shield-kerberos-realm.git
     $ mvn package
-    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.0.0.zip
+    $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.1.0.zip
 
 ###Configuration
 
