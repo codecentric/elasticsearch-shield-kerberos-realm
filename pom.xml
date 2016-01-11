@@ -15,11 +15,11 @@
     <properties>
         <!-- define the plugin classname so it can be put in the descriptor -->
         <elasticsearch.plugin.classname>de.codecentric.elasticsearch.plugin.kerberosrealm.KerberosRealmPlugin</elasticsearch.plugin.classname>
-        <!-- this plugin cannot be isolated since it needs to directly interact 
+        <!-- this plugin cannot be isolated since it needs to directly interact
             with Shield -->
         <elasticsearch.plugin.isolated>false</elasticsearch.plugin.isolated>
 
-        <!-- define the location and information for the integration tests 
+        <!-- define the location and information for the integration tests
             run as part of the verify phase -->
         <elasticsearch.integ.antfile>${project.basedir}/integration-tests.xml</elasticsearch.integ.antfile>
         <plugins.list>license,shield,elasticsearch-shield-kerberos-realm</plugins.list>
@@ -246,4 +246,44 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.7.5.201505241946</version>
+                        <executions>
+                            <!-- Prepares the property pointing to the JaCoCo
+                            runtime agent which is passed as VM argument when Maven the Surefire plugin
+                            is executed. -->
+                            <execution>
+                                <id>pre-unit-test</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+
+                            <!-- Ensures that the code coverage report for
+                            unit tests is created after unit tests have been run. -->
+                            <execution>
+                                <id>post-unit-test</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.eluder.coveralls</groupId>
+                        <artifactId>coveralls-maven-plugin</artifactId>
+                        <version>4.1.0</version>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
