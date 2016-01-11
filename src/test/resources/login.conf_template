@@ -9,3 +9,13 @@ com.sun.security.jgss.krb5.initiate {
     debug=${debug}
     ;
 };
+
+no.ticket.cache {
+    com.sun.security.auth.module.Krb5LoginModule
+    required
+    refreshKrb5Config=true
+    storeKey=false
+    useTicketCache=false
+    debug=${debug}
+    ;
+};
