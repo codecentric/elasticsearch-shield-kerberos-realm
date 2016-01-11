@@ -6,4 +6,4 @@ jdk:
   - oraclejdk8
 
 after_success:
-  - mvn clean test jacoco:report coveralls:report -Pcoverage
+  - mvn clean test jacoco:report coveralls:report -Pcoverage -Dmaven.build.timestamp.format=yyMMddHHmm
