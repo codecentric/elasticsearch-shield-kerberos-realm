@@ -3,6 +3,7 @@ Shield Kerberos Realm
 
 [![Build Status](https://travis-ci.org/codecentric/elasticsearch-shield-kerberos-realm.svg?branch=master)](https://travis-ci.org/codecentric/elasticsearch-shield-kerberos-realm)
 [![Coverage Status](https://coveralls.io/repos/britter/bean-validators/badge.svg)](https://coveralls.io/r/britter/bean-validators)
+[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.1.  
 Authenticate HTTP and Transport requests via Kerberos/SPNEGO.
