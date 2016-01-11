@@ -4,3 +4,6 @@ sudo: false
 jdk:
   - oraclejdk7
   - oraclejdk8
+
+after_success:
+  - mvn jacoco:report coveralls:report
