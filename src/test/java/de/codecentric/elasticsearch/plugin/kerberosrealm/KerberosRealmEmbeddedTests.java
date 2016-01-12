@@ -20,6 +20,7 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.io.File;
 import java.net.URL;
@@ -46,12 +47,14 @@ import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.shield.ShieldPlugin;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.MockingKerberizedClient;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.NetUtil;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.SettingConstants;
 
 /**
@@ -221,15 +224,15 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
 
         hcon = new SpnegoHttpURLConnection("com.sun.security.jgss.krb5.initiate");
         hcon.requestCredDeleg(true);
-        hcon.connect(new URL(getServerUri() + "/"));
+        hcon.connect(new URL(getServerUri() + "/_nodes/settings"));
         Assert.assertEquals(200, hcon.getResponseCode());
 
-        final CloseableHttpClient httpClient = getHttpClient(true);
-        final CloseableHttpResponse response = httpClient.execute(new HttpGet(new URL(getServerUri() + "/_nodes/settings").toURI()));
+        //final CloseableHttpClient httpClient = getHttpClient(true);
+        //final CloseableHttpResponse response = httpClient.execute(new HttpGet(new URL(getServerUri() + "/_nodes/settings").toURI()));
 
-        assertThat(response.getStatusLine().getStatusCode(), is(200));
+        //assertThat(response.getStatusLine().getStatusCode(), is(200));
 
-        final XContentParser parser = JsonXContent.jsonXContent.createParser(response.getEntity().getContent());
+        final XContentParser parser = JsonXContent.jsonXContent.createParser(hcon.getInputStream());
         XContentParser.Token token;
         Settings settings = null;
         while ((token = parser.nextToken()) != null) {
@@ -241,11 +244,77 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
             }
         }
         assertTrue(settings != null);
+        assertFalse(settings.getAsMap().isEmpty());
         assertTrue(settings.getGroups("shield.authc.realms." + KerberosRealm.TYPE).isEmpty());
+    }
+    
+    @Test
+    public void testRestNoTicketCache() throws Exception {
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
+        FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
+        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM",
+                new File("testtmp/config/keytab/es_server.keytab")); //server, acceptor
+
+        final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
+                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
+                .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
+                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
+                //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
+                .build();
+
+        this.startES(esServerSettings);
+        
+        net.sourceforge.spnego.SpnegoHttpURLConnection hcon = new SpnegoHttpURLConnection("no.ticket.cache","spock/admin@CCK.COM","secret");
+
+        hcon.requestCredDeleg(true);
+        hcon.connect(new URL(getServerUri() + "/_nodes/settings"));
+        Assert.assertEquals(200, hcon.getResponseCode());
+
+        //final CloseableHttpClient httpClient = getHttpClient(true);
+        //final CloseableHttpResponse response = httpClient.execute(new HttpGet(new URL(getServerUri() + "/_nodes/settings").toURI()));
+
+        //assertThat(response.getStatusLine().getStatusCode(), is(401));
     }
 
     @Test
-    public void testRestBadUser() throws Exception {
+    @Ignore
+    public void testRestNoTicket() throws Exception {
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
+        FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
+        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM",
+                new File("testtmp/config/keytab/es_server.keytab")); //server, acceptor
+
+        //final TgtTicket tgt = embeddedKrbServer.getSimpleKdcServer().getKrbClient().requestTgtWithPassword("spock/admin@CCK.COM", "secret");
+        //embeddedKrbServer.getSimpleKdcServer().getKrbClient().storeTicket(tgt, new File("testtmp/tgtcc/spock.cc"));
+
+        final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
+                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
+                .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
+                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
+                //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
+                .build();
+
+        this.startES(esServerSettings);
+        
+        net.sourceforge.spnego.SpnegoHttpURLConnection hcon = new SpnegoHttpURLConnection("no.ticket.cache","1spock/admin@CCK.COM","secret");
+
+        hcon.requestCredDeleg(true);
+        hcon.connect(new URL(getServerUri() + "/_nodes/settings"));
+        Assert.assertEquals(200, hcon.getResponseCode());
+
+        //final CloseableHttpClient httpClient = getHttpClient(true);
+        //final CloseableHttpResponse response = httpClient.execute(new HttpGet(new URL(getServerUri() + "/_nodes/settings").toURI()));
+
+        //assertThat(response.getStatusLine().getStatusCode(), is(401));
+    }
+    
+    @Test
+    @Ignore
+    public void testRestBadAcceptor() throws Exception {
         embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
         embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
         FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
@@ -263,10 +332,16 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
                 .build();
 
         this.startES(esServerSettings);
+        
+        net.sourceforge.spnego.SpnegoHttpURLConnection hcon = new SpnegoHttpURLConnection("com.sun.security.jgss.krb5.initiate");
 
-        final CloseableHttpClient httpClient = getHttpClient(true);
-        final CloseableHttpResponse response = httpClient.execute(new HttpGet(new URL(getServerUri() + "/_nodes/settings").toURI()));
+        hcon.requestCredDeleg(true);
+        hcon.connect(new URL(getServerUri() + "/_nodes/settings"));
+        Assert.assertEquals(401, hcon.getResponseCode());
 
-        assertThat(response.getStatusLine().getStatusCode(), is(401));
+        //final CloseableHttpClient httpClient = getHttpClient(true);
+        //final CloseableHttpResponse response = httpClient.execute(new HttpGet(new URL(getServerUri() + "/_nodes/settings").toURI()));
+
+        //assertThat(response.getStatusLine().getStatusCode(), is(401));
     }
 }

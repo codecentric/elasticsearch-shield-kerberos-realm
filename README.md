@@ -2,7 +2,7 @@ Shield Kerberos Realm
 =====================
 
 [![Build Status](https://travis-ci.org/codecentric/elasticsearch-shield-kerberos-realm.svg?branch=master)](https://travis-ci.org/codecentric/elasticsearch-shield-kerberos-realm)
-[![Coverage Status](https://coveralls.io/repos/britter/bean-validators/badge.svg)](https://coveralls.io/r/britter/bean-validators)
+[![Coverage Status](https://coveralls.io/repos/codecentric/elasticsearch-shield-kerberos-realm/badge.svg?branch=master&service=github)](https://coveralls.io/github/codecentric/elasticsearch-shield-kerberos-realm?branch=master)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.1.  
