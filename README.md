@@ -1,6 +1,10 @@
 Shield Kerberos Realm
 =====================
 
+[![Build Status](https://travis-ci.org/codecentric/elasticsearch-shield-kerberos-realm.svg?branch=master)](https://travis-ci.org/codecentric/elasticsearch-shield-kerberos-realm)
+[![Coverage Status](https://coveralls.io/repos/britter/bean-validators/badge.svg)](https://coveralls.io/r/britter/bean-validators)
+[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
 Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.1.  
 Authenticate HTTP and Transport requests via Kerberos/SPNEGO.
 
@@ -39,7 +43,7 @@ Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.
 
 ###Configuration
 
-Configuration is done in elasticsearch.yml 
+Configuration is done in elasticsearch.yml
 
     shield.authc.realms.cc-kerberos.type: cc-kerberos
     shield.authc.realms.cc-kerberos.order: 0
@@ -64,43 +68,42 @@ Configuration is done in elasticsearch.yml
 
     $ kinit
     $ curl --negotiate -u : "http://localhost:9200/_logininfo?pretty"
-    
+
 Or with a browser that supports SPNEGO like Chrome or Firefox
 
 ###Transport authentication
 
     try (TransportClient client = TransportClient.builder().settings(settings).build()) {
         client.addTransportAddress(nodes[0].getTransport().address().publishAddress());
-            try (KerberizedClient kc = new KerberizedClient(client, 
-                                            "user@REALM.COM", 
-                                            "secret", 
+            try (KerberizedClient kc = new KerberizedClient(client,
+                                            "user@REALM.COM",
+                                            "secret",
                                             "HTTP/localhost@REALM.COM")) {
 
                 ClusterHealthResponse response = kc.admin().cluster().prepareHealth().execute().actionGet();
                 assertThat(response.isTimedOut(), is(false));
             }
     }
-    
+
 ####Login with password
-    KerberizedClient kc = new KerberizedClient(client, 
-                                            "user@REALM.COM", 
-                                            "secret", 
+    KerberizedClient kc = new KerberizedClient(client,
+                                            "user@REALM.COM",
+                                            "secret",
                                             "HTTP/localhost@REALM.COM")
 
 ####Login with (client side) keytab
-    KerberizedClient kc = new KerberizedClient(client, 
-                                            Paths.get("client.keytab"), 
-                                            "user@REALM.COM", 
+    KerberizedClient kc = new KerberizedClient(client,
+                                            Paths.get("client.keytab"),
+                                            "user@REALM.COM",
                                             "HTTP/localhost@REALM.COM")
-                                            
+
 ####Login with TGT (Ticket)
-    KerberizedClient kc = new KerberizedClient(client, 
-                                            "user@REALM.COM", 
+    KerberizedClient kc = new KerberizedClient(client,
+                                            "user@REALM.COM",
                                              Paths.get("ticket.cc"),
                                             "HTTP/localhost@REALM.COM")    
 
 ####Login with javax.security.auth.Subject
-    KerberizedClient kc = new KerberizedClient(client, 
+    KerberizedClient kc = new KerberizedClient(client,
                                              subject,
                                             "HTTP/localhost@REALM.COM")    
-    
