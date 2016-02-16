@@ -31,3 +31,5 @@ nb-configuration.xml
 nbactions.xml
 
 dependency-reduced-pom.xml
+integ_test_t*
+testtmp
