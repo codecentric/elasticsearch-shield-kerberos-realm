@@ -78,7 +78,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
                 //relative to config
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "elasticsearch/transport@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
                 //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
                 .build();
@@ -119,7 +119,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
 
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "mock")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "mock").put(PREFIX + "mock_mode", true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 .build();
 
         this.startES(esServerSettings);
@@ -160,7 +160,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "elasticsearch/transport@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
                 //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
                 .build();
@@ -209,7 +209,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
                 //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
                 .build();
@@ -259,7 +259,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
                 //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
                 .build();
@@ -293,7 +293,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
                 //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
                 .build();
@@ -326,7 +326,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
 
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "bad").put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
-                .putArray(PREFIX + SettingConstants.ROLES, "cc_kerberos_realm_role") //static roles
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
                 //.put(PREFIX+SettingConstants.KRB_DEBUG, true)
                 .build();

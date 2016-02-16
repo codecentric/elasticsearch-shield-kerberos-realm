@@ -26,7 +26,10 @@ import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -36,6 +39,7 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.node.liveness.LivenessRequest;
 import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.shield.User;
@@ -49,7 +53,9 @@ import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.ListMultimap;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
@@ -64,7 +70,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     private final boolean stripRealmFromPrincipalName;
     private final String acceptorPrincipal;
     private final Path acceptorKeyTabPath;
-    private final String[] roles;
+    private final ListMultimap<String, String> rolesMap = ArrayListMultimap.<String, String> create();
     private final Environment env;
     private final boolean mockMode;
 
@@ -73,7 +79,24 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
         stripRealmFromPrincipalName = config.settings().getAsBoolean(SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true);
         acceptorPrincipal = config.settings().get(SettingConstants.ACCEPTOR_PRINCIPAL, null);
         final String acceptorKeyTab = config.settings().get(SettingConstants.ACCEPTOR_KEYTAB_PATH, null);
-        roles = config.settings().getAsArray(SettingConstants.ROLES, new String[0]);
+        
+        //shield.authc.realms.cc-kerberos.roles.<role1>: principal1, principal2
+        //shield.authc.realms.cc-kerberos.roles.<role2>: principal1, principal3
+        ////shield.authc.realms.cc-kerberos.roles.admin: luke@EXAMPLE.COM, vader@EXAMPLE.COM
+        
+        Map<String, Settings> roleGroups = config.settings().getGroups(SettingConstants.ROLES+".");
+        
+        if(roleGroups != null) {
+            for(String roleGroup:roleGroups.keySet()) {
+                
+                for(String principal:config.settings().getAsArray(SettingConstants.ROLES+"."+roleGroup)) {
+                    rolesMap.put(stripRealmName(principal, stripRealmFromPrincipalName), roleGroup);
+                }
+            }
+        }
+        
+        logger.debug("Parsed roles: {}", rolesMap);
+        
         env = new Environment(config.globalSettings());
         mockMode = config.settings().getAsBoolean("mock_mode", false);
 
@@ -233,7 +256,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
         }
 
         if (message instanceof LivenessRequest) {
-            return new KerberosAuthenticationToken(new byte[0], "_krb_livness_passthrough"); //TODO let liveness requests pass through
+            return KerberosAuthenticationToken.LIVENESS_TOKEN;
         }
 
         final String authorizationHeader = message.getHeader("Authorization");
@@ -246,6 +269,11 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
     @Override
     public User authenticate(final KerberosAuthenticationToken token) {
+        
+        if(token == KerberosAuthenticationToken.LIVENESS_TOKEN) {
+            return User.SYSTEM;
+        }
+        
         final String actualUser = token.principal();
 
         if (actualUser == null || actualUser.isEmpty() || token.credentials() == null) {
@@ -253,8 +281,15 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
             return null;
         }
 
-        logger.debug("User '{}' successully authenticated", actualUser);
-        return new User.Simple(actualUser, roles);
+        String[] userRoles = new String[0];
+        List<String> userRolesList = rolesMap.get(actualUser);
+
+        if(userRolesList != null && !userRolesList.isEmpty()) {
+            userRoles = userRolesList.toArray(new String[0]);
+        }
+        
+        logger.debug("User '{}' with roles {} successully authenticated", actualUser, Arrays.toString(userRoles));
+        return new User.Simple(actualUser, userRoles);
     }
 
     @Override
@@ -321,20 +356,24 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
             if (gssName != null) {
                 String name = gssName.toString();
 
-                if (strip && name != null) {
-                    final int i = name.indexOf('@');
-                    if (i > 0) {
-                        // Zero so we don;t leave a zero length name
-                        name = name.substring(0, i);
-                    }
-                }
-
-                return name;
+                return stripRealmName(name, strip);
 
             }
         }
 
         return null;
+    }
+    
+    private static String stripRealmName(String name, boolean strip){
+        if (strip && name != null) {
+            final int i = name.indexOf('@');
+            if (i > 0) {
+                // Zero so we don;t leave a zero length name
+                name = name.substring(0, i);
+            }
+        }
+        
+        return name;
     }
 
     private static class SimpleUserPrincipal implements Principal, Serializable {

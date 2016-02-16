@@ -184,13 +184,13 @@ public class KerberizedClient extends FilterClient {
                 final ElasticsearchSecurityException securityException = (ElasticsearchSecurityException) cause;
 
                 if (++count > 100) {
-                    inner.onFailure(new ElasticsearchException("kerberos loop"));
+                    inner.onFailure(new ElasticsearchException("kerberos loop", cause));
                     return;
                 } else {
                     String negotiateHeaderValue = null;
                     final List<String> headers = securityException.getHeader(KrbConstants.WWW_AUTHENTICATE);
                     if (headers == null || headers.isEmpty()) {
-                        inner.onFailure(new ElasticsearchException("no auth header"));
+                        inner.onFailure(new ElasticsearchException("no auth header", cause));
                         return;
                     } else if (headers.size() == 1) {
                         negotiateHeaderValue = headers.get(0).trim();

@@ -25,6 +25,7 @@ import org.elasticsearch.shield.authc.AuthenticationToken;
 
 public class KerberosAuthenticationToken implements AuthenticationToken {
 
+    static final KerberosAuthenticationToken LIVENESS_TOKEN = new KerberosAuthenticationToken(new byte[]{1,2,3}, "LIVENESS_TOKEN");
     protected final ESLogger logger = Loggers.getLogger(this.getClass());
     private byte[] outToken;
     private final String principal;
