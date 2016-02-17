@@ -154,7 +154,7 @@ public abstract class AbstractUnitTest {
 
         // @formatter:off
         return settingsBuilder()
-                //.putArray("plugin.types", ShieldPlugin.class.getName(), LicensePlugin.class.getName(), KerberosRealmPlugin.class.getName())
+                .putArray("plugin.types", ShieldPlugin.class.getName(), LicensePlugin.class.getName(), KerberosRealmPlugin.class.getName())
                 .putArray("plugin.mandatory",KerberosRealm.TYPE + "-realm","shield","license")
                 .put("index.queries.cache.type", "opt_out_cache").put(PREFIX + "order", 0).put(PREFIX + "type", "cc-kerberos")
                 .put("path.home", ".").put("node.name", "kerberosrealm_testnode_" + nodenum).put("node.data", dataNode)

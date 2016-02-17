@@ -10,7 +10,7 @@ import org.elasticsearch.plugins.Plugin;
 public class PluginEnabledNode extends Node{
 
     public PluginEnabledNode(Settings preparedSettings, Collection<Class<? extends Plugin>> classpathPlugins) {
-        super(preparedSettings, Version.CURRENT, classpathPlugins);
+        super(preparedSettings);
     }
 
     
