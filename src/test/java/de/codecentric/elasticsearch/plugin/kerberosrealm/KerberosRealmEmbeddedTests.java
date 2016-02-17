@@ -119,7 +119,7 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
 
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "mock")
                 .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "mock").put(PREFIX + "mock_mode", true)
-                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
+                .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM","mock_principal")
                 .build();
 
         this.startES(esServerSettings);
