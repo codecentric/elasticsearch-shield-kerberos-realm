@@ -50,10 +50,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.kerby.util.NetworkUtil;
 import org.elasticsearch.ElasticsearchTimeoutException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
@@ -78,7 +78,6 @@ import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.EmbeddedKRBServer;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.NetUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 
 @SuppressForbidden(reason = "unit test")
@@ -161,7 +160,9 @@ public abstract class AbstractUnitTest {
                 .put("node.master", masterNode).put("cluster.name", clustername).put("path.data", "testtmp/data")
                 .put("path.work", "testtmp/work").put("path.logs", "testtmp/logs").put("path.conf", "testtmp/config")
                 .put("path.plugins", "testtmp/plugins").put("index.number_of_shards", "2").put("index.number_of_replicas", "1")
-                .put("http.host", NetUtil.getNonLocalhostAddress()).put("http.port", httpPort).put("http.enabled", !dataNode)
+                .put("http.host", "localhost")
+                .put("http.port", httpPort)
+                .put("http.enabled", !dataNode)
                 //.put("transport.tcp.port", nodePort) //currently not working
                 .put("http.cors.enabled", true)
                 //.put("network.host", getNonLocalhostAddress()) //currently not working
@@ -171,8 +172,7 @@ public abstract class AbstractUnitTest {
     }
 
     protected final String getServerUri() {
-        final String nonLocalhostAdress = NetUtil.getNonLocalhostAddress();
-        final String address = "http://" + nonLocalhostAdress + ":" + elasticsearchHttpPort1;
+        final String address = "http://localhost:" + elasticsearchHttpPort1;
         log.debug("Connect to {}", address);
         return address;
     }

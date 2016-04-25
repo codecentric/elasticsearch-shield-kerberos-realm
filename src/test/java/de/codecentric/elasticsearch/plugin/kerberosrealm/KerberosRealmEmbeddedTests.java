@@ -35,10 +35,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.kerby.kerberos.kerb.spec.ticket.TgtTicket;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -53,7 +53,6 @@ import org.junit.Test;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.MockingKerberizedClient;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.NetUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.SettingConstants;
 
@@ -196,18 +195,18 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
     @Test
     public void testSettingsFiltering() throws Exception {
         embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
-        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/localhost@CCK.COM", "testpwd1");
 
         FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
 
-        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM",
+        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/localhost@CCK.COM",
                 new File("testtmp/config/keytab/es_server.keytab")); //server, acceptor
 
         final TgtTicket tgt = embeddedKrbServer.getSimpleKdcServer().getKrbClient().requestTgtWithPassword("spock/admin@CCK.COM", "secret");
         embeddedKrbServer.getSimpleKdcServer().getKrbClient().storeTicket(tgt, new File("testtmp/tgtcc/spock.cc"));
 
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
-                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
+                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/localhost@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
                 .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
@@ -251,13 +250,13 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
     @Test
     public void testRestNoTicketCache() throws Exception {
         embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
-        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/localhost@CCK.COM", "testpwd1");
         FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
-        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM",
+        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/localhost@CCK.COM",
                 new File("testtmp/config/keytab/es_server.keytab")); //server, acceptor
 
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
-                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
+                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/localhost@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
                 .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
@@ -282,16 +281,16 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
     @Ignore
     public void testRestNoTicket() throws Exception {
         embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
-        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/localhost@CCK.COM", "testpwd1");
         FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
-        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM",
+        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/localhost@CCK.COM",
                 new File("testtmp/config/keytab/es_server.keytab")); //server, acceptor
 
         //final TgtTicket tgt = embeddedKrbServer.getSimpleKdcServer().getKrbClient().requestTgtWithPassword("spock/admin@CCK.COM", "secret");
         //embeddedKrbServer.getSimpleKdcServer().getKrbClient().storeTicket(tgt, new File("testtmp/tgtcc/spock.cc"));
 
         final Settings esServerSettings = Settings.builder().put(PREFIX + SettingConstants.ACCEPTOR_KEYTAB_PATH, "keytab/es_server.keytab")
-                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM")
+                .put(PREFIX + SettingConstants.ACCEPTOR_PRINCIPAL, "HTTP/localhost@CCK.COM")
                 .put(PREFIX + SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true)
                 .putArray(PREFIX + SettingConstants.ROLES+".cc_kerberos_realm_role", "spock/admin@CCK.COM")
                 //.put(PREFIX+SettingConstants.KRB5_FILE_PATH,"") //if already set by kerby here
@@ -316,9 +315,9 @@ public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
     @Ignore
     public void testRestBadAcceptor() throws Exception {
         embeddedKrbServer.getSimpleKdcServer().createPrincipal("spock/admin@CCK.COM", "secret");
-        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM", "testpwd1");
+        embeddedKrbServer.getSimpleKdcServer().createPrincipal("HTTP/localhost@CCK.COM", "testpwd1");
         FileUtils.forceMkdir(new File("testtmp/config/keytab/"));
-        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@CCK.COM",
+        embeddedKrbServer.getSimpleKdcServer().exportPrincipal("HTTP/localhost@CCK.COM",
                 new File("testtmp/config/keytab/es_server.keytab")); //server, acceptor
 
         final TgtTicket tgt = embeddedKrbServer.getSimpleKdcServer().getKrbClient().requestTgtWithPassword("spock/admin@CCK.COM", "secret");

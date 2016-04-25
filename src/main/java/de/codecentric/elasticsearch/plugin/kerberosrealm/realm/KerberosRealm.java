@@ -42,6 +42,7 @@ import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.shield.InternalSystemUser;
 import org.elasticsearch.shield.User;
 import org.elasticsearch.shield.authc.AuthenticationToken;
 import org.elasticsearch.shield.authc.Realm;
@@ -271,7 +272,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     public User authenticate(final KerberosAuthenticationToken token) {
         
         if(token == KerberosAuthenticationToken.LIVENESS_TOKEN) {
-            return User.SYSTEM;
+            return InternalSystemUser.INSTANCE;
         }
         
         final String actualUser = token.principal();
@@ -289,7 +290,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
         }
         
         logger.debug("User '{}' with roles {} successully authenticated", actualUser, Arrays.toString(userRoles));
-        return new User.Simple(actualUser, userRoles);
+        return new User(actualUser, userRoles);
     }
 
     @Override

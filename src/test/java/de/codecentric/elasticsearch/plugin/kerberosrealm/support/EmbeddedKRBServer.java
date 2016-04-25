@@ -68,8 +68,8 @@ public class EmbeddedKRBServer {
         eks.getSimpleKdcServer().createPrincipal("HTTP/localhost@DUMMY.COM", "httplocpwd");
         eks.getSimpleKdcServer().exportPrincipal("HTTP/localhost@DUMMY.COM", new File(workDir, "httploc.keytab")); //server, acceptor
 
-        eks.getSimpleKdcServer().createPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@DUMMY.COM", "httpcpwd");
-        eks.getSimpleKdcServer().exportPrincipal("HTTP/" + NetUtil.getNonLocalhostAddress() + "@DUMMY.COM",
+        eks.getSimpleKdcServer().createPrincipal("HTTP/localhost@DUMMY.COM", "httpcpwd");
+        eks.getSimpleKdcServer().exportPrincipal("HTTP/localhost@DUMMY.COM",
                 new File(workDir, "http.keytab")); //server, acceptor
 
         final TgtTicket tgt = eks.getSimpleKdcServer().getKrbClient().requestTgtWithPassword("kirk/admin@DUMMY.COM", "kirkpwd");
@@ -86,10 +86,5 @@ public class EmbeddedKRBServer {
         } catch (final Exception e) {
             System.out.println("Unable to copy generated krb5.conf to /etc diúe to " + e.getMessage());
         }
-
-        System.out.println("IP: " + NetUtil.getNonLocalhostAddress());
-        System.out.println("TCP Port " + eks.getSimpleKdcServer().getKdcSetting().getKdcTcpPort());
-        System.out.println("UDP Port " + eks.getSimpleKdcServer().getKdcSetting().getKdcUdpPort());
-        System.out.println("Look here: " + workDir.getAbsolutePath());
     }
 }
