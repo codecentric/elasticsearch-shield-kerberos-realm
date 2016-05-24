@@ -17,6 +17,8 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import org.elasticsearch.common.logging.ESLogger;
@@ -29,11 +31,20 @@ public class KerberosAuthenticationToken implements AuthenticationToken {
     protected final ESLogger logger = Loggers.getLogger(this.getClass());
     private byte[] outToken;
     private final String principal;
+    private List<String> groups;
 
     public KerberosAuthenticationToken(final byte[] outToken, final String principal) {
         super();
         this.outToken = Objects.requireNonNull(outToken);
         this.principal = Objects.requireNonNull(principal);
+        this.groups = new ArrayList<String>();
+    }
+
+    public KerberosAuthenticationToken(final byte[] outToken, final String principal, final List<String> groups2) {
+        super();
+        this.outToken = Objects.requireNonNull(outToken);
+        this.principal = Objects.requireNonNull(principal);
+        this.groups = groups2;
     }
 
     @Override
@@ -50,6 +61,10 @@ public class KerberosAuthenticationToken implements AuthenticationToken {
     @Override
     public String principal() {
         return principal;
+    }
+    
+    public List<String> groups() {
+        return this.groups;
     }
 
     @Override
