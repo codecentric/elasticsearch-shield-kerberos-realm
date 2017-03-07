@@ -21,15 +21,13 @@ import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 
 public class SettingConstants {
 
-    private static final String PREFIX = "de.codecentric.realm." + KerberosRealm.TYPE + ".";
-    //public static final String JAAS_LOGIN_CONF_FILE_PATH = "jaas_login_conf.file_path";
     public static final String STRIP_REALM_FROM_PRINCIPAL = "strip_realm_from_principal";
     public static final String ACCEPTOR_KEYTAB_PATH = "acceptor_keytab_path";
     public static final String ACCEPTOR_PRINCIPAL = "acceptor_principal";
     public static final String ROLES = "roles";
-
-    public static final String KRB_DEBUG = PREFIX + "krb_debug";
-    public static final String KRB5_FILE_PATH = PREFIX + "krb5.file_path";
+    private static final String PREFIX = "de.codecentric.realm." + KerberosRealm.TYPE + ".";
+    static final String KRB_DEBUG = PREFIX + "krb_debug";
+    static final String KRB5_FILE_PATH = PREFIX + "krb5.file_path";
 
     private SettingConstants() {
 

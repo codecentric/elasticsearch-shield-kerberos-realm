@@ -198,7 +198,6 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
                 byte[] outToken;
 
                 try {
-
                     final Subject subject = JaasKrbUtil.loginUsingKeytab(acceptorPrincipal, acceptorKeyTabPath, false);
 
                     final GSSManager manager = GSSManager.getInstance();

@@ -22,22 +22,22 @@ import org.ietf.jgss.Oid;
 
 public class KrbConstants {
 
+    public static final Oid SPNEGO;
+    public static final String JAAS_LOGIN_CONF_PROP = "java.security.auth.login.config";
+    public static final String NEGOTIATE = "Negotiate";
+    public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
+    static final String KRB5_CONF_PROP = "java.security.krb5.conf";
+    static final String USE_SUBJECT_CREDS_ONLY_PROP = "javax.security.auth.useSubjectCredsOnly";
+
     static {
         Oid spnegoTmp = null;
         try {
             spnegoTmp = new Oid("1.3.6.1.5.5.2");
-        } catch (final GSSException e) {
+        } catch (final GSSException ignored) {
 
         }
         SPNEGO = spnegoTmp;
     }
-
-    public static final Oid SPNEGO;
-    public static final String KRB5_CONF_PROP = "java.security.krb5.conf";
-    public static final String JAAS_LOGIN_CONF_PROP = "java.security.auth.login.config";
-    public static final String USE_SUBJECT_CREDS_ONLY_PROP = "javax.security.auth.useSubjectCredsOnly";
-    public static final String NEGOTIATE = "Negotiate";
-    public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 
     private KrbConstants() {
     }

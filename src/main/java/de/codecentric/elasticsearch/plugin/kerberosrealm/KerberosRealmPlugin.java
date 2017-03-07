@@ -30,8 +30,6 @@ import org.elasticsearch.shield.authc.AuthenticationModule;
 
 import java.nio.file.Paths;
 
-/**
- */
 public class KerberosRealmPlugin extends Plugin {
 
     private static final String CLIENT_TYPE = "client.type";

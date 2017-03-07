@@ -17,16 +17,16 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
 
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
+
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class PropertyUtil {
 
@@ -45,9 +45,9 @@ public class PropertyUtil {
         //PropertyUtil.setSystemProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "true", false); //TODO make strict
         try {
             PropertyUtil.setSystemPropertyToRelativeFile(KrbConstants.KRB5_CONF_PROP, conf,
-                    settings.get(SettingConstants.KRB5_FILE_PATH, "/etc/krb5.conf"), false, true);
+                    settings.get(SettingConstants.KRB5_FILE_PATH, "/etc/krb5.conf"));
         } catch (final FileNotFoundException e) {
-            ExceptionsHelper.convertToElastic(e);
+            throw ExceptionsHelper.convertToElastic(e);
         }
 
         final boolean krbDebug = settings.getAsBoolean(SettingConstants.KRB_DEBUG, false);
@@ -68,8 +68,7 @@ public class PropertyUtil {
 
     }
 
-    public static boolean setSystemPropertyToRelativeFile(final String property, final Path parentDir, final String relativeFileName,
-            final boolean overwrite, final boolean checkFileExists) throws FileNotFoundException {
+    private static boolean setSystemPropertyToRelativeFile(final String property, final Path parentDir, final String relativeFileName) throws FileNotFoundException {
         if (relativeFileName == null) {
             log.error("Cannot set property " + property + " because filename is null");
             return false;
@@ -77,16 +76,10 @@ public class PropertyUtil {
         final Path path = parentDir.resolve(relativeFileName).toAbsolutePath();
 
         if (Files.isReadable(path) && !Files.isDirectory(path)) {
-            return setSystemProperty(property, path.toString(), overwrite);
+            return setSystemProperty(property, path.toString(), false);
         } else {
-
-            if (checkFileExists) {
-                throw new FileNotFoundException(path.toString());
-            }
-
-            log.error("Cannot read from {}, maybe the file does not exists? ", path.toString());
+            throw new FileNotFoundException(path.toString());
         }
-        return false;
     }
 
     public static boolean setSystemProperty(final String property, final String value, final boolean overwrite) {

@@ -20,14 +20,6 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
 //taken from the apache kerby project
 //https://directory.apache.org/kerby/
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -38,6 +30,13 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * JAAS utilities for Kerberos login.
@@ -50,10 +49,10 @@ public final class JaasKrbUtil {
     }
 
     public static Subject loginUsingPassword(final String principal, final String password) throws LoginException {
-        final Set<Principal> principals = new HashSet<Principal>();
+        final Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
 
-        final Subject subject = new Subject(false, principals, new HashSet<Object>(), new HashSet<Object>());
+        final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
 
         final Configuration conf = usePassword(principal);
         final String confName = "PasswordConf";
@@ -64,10 +63,10 @@ public final class JaasKrbUtil {
     }
 
     public static Subject loginUsingTicketCache(final String principal, final Path cachePath) throws LoginException {
-        final Set<Principal> principals = new HashSet<Principal>();
+        final Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
 
-        final Subject subject = new Subject(false, principals, new HashSet<Object>(), new HashSet<Object>());
+        final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
 
         final Configuration conf = useTicketCache(principal, cachePath);
         final String confName = "TicketCacheConf";
@@ -77,10 +76,10 @@ public final class JaasKrbUtil {
     }
 
     public static Subject loginUsingKeytab(final String principal, final Path keytabPath, final boolean initiator) throws LoginException {
-        final Set<Principal> principals = new HashSet<Principal>();
+        final Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
 
-        final Subject subject = new Subject(false, principals, new HashSet<Object>(), new HashSet<Object>());
+        final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
 
         final Configuration conf = useKeytab(principal, keytabPath, initiator);
         final String confName = "KeytabConf";
@@ -89,15 +88,15 @@ public final class JaasKrbUtil {
         return loginContext.getSubject();
     }
 
-    public static Configuration usePassword(final String principal) {
+    private static Configuration usePassword(final String principal) {
         return new PasswordJaasConf(principal);
     }
 
-    public static Configuration useTicketCache(final String principal, final Path credentialPath) {
+    private static Configuration useTicketCache(final String principal, final Path credentialPath) {
         return new TicketCacheJaasConf(principal, credentialPath);
     }
 
-    public static Configuration useKeytab(final String principal, final Path keytabPath, final boolean initiator) {
+    private static Configuration useKeytab(final String principal, final Path keytabPath, final boolean initiator) {
         return new KeytabJaasConf(principal, keytabPath, initiator);
     }
 
@@ -111,7 +110,7 @@ public final class JaasKrbUtil {
         private final Path keytabPath;
         private final boolean initiator;
 
-        public KeytabJaasConf(final String principal, final Path keytab, final boolean initiator) {
+        KeytabJaasConf(final String principal, final Path keytab, final boolean initiator) {
             this.principal = principal;
             this.keytabPath = keytab;
             this.initiator = initiator;
@@ -119,7 +118,7 @@ public final class JaasKrbUtil {
 
         @Override
         public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
-            final Map<String, String> options = new HashMap<String, String>();
+            final Map<String, String> options = new HashMap<>();
             options.put("keyTab", keytabPath.toAbsolutePath().toString());
             options.put("principal", principal);
             options.put("useKeyTab", "true");
@@ -139,14 +138,14 @@ public final class JaasKrbUtil {
         private final String principal;
         private final Path clientCredentialPath;
 
-        public TicketCacheJaasConf(final String principal, final Path clientCredentialPath) {
+        TicketCacheJaasConf(final String principal, final Path clientCredentialPath) {
             this.principal = principal;
             this.clientCredentialPath = clientCredentialPath;
         }
 
         @Override
         public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
-            final Map<String, String> options = new HashMap<String, String>();
+            final Map<String, String> options = new HashMap<>();
             options.put("principal", principal);
             options.put("storeKey", "false");
             options.put("doNotPrompt", "false");
@@ -165,7 +164,7 @@ public final class JaasKrbUtil {
     static class PasswordJaasConf extends Configuration {
         private final String principal;
 
-        public PasswordJaasConf(final String principal) {
+        PasswordJaasConf(final String principal) {
             this.principal = principal;
         }
 
@@ -190,16 +189,16 @@ public final class JaasKrbUtil {
         private final String principal;
         private final String password;
 
-        public KrbCallbackHandler(final String principal, final String password) {
+        KrbCallbackHandler(final String principal, final String password) {
             this.principal = principal;
             this.password = password;
         }
 
         @Override
         public void handle(final Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-            for (int i = 0; i < callbacks.length; i++) {
-                if (callbacks[i] instanceof PasswordCallback) {
-                    final PasswordCallback pc = (PasswordCallback) callbacks[i];
+            for (Callback callback : callbacks) {
+                if (callback instanceof PasswordCallback) {
+                    final PasswordCallback pc = (PasswordCallback) callback;
                     if (pc.getPrompt().contains(principal)) {
                         pc.setPassword(password.toCharArray());
                         break;
