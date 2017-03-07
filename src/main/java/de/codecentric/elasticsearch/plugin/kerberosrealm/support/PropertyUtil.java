@@ -47,7 +47,7 @@ public class PropertyUtil {
             PropertyUtil.setSystemPropertyToRelativeFile(KrbConstants.KRB5_CONF_PROP, conf,
                     settings.get(SettingConstants.KRB5_FILE_PATH, "/etc/krb5.conf"));
         } catch (final FileNotFoundException e) {
-            throw ExceptionsHelper.convertToElastic(e);
+            ExceptionsHelper.convertToElastic(e); // TODO add throw
         }
 
         final boolean krbDebug = settings.getAsBoolean(SettingConstants.KRB_DEBUG, false);
