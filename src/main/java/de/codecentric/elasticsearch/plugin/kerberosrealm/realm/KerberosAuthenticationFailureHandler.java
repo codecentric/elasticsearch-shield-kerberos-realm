@@ -17,6 +17,7 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchSecurityException;
 import org.elasticsearch.common.logging.ESLogger;
@@ -26,13 +27,9 @@ import org.elasticsearch.shield.authc.AuthenticationToken;
 import org.elasticsearch.shield.authc.DefaultAuthenticationFailureHandler;
 import org.elasticsearch.transport.TransportMessage;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
-
-/**
- */
 public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationFailureHandler {
 
-    protected final ESLogger logger = Loggers.getLogger(this.getClass());
+    private final ESLogger logger = Loggers.getLogger(this.getClass());
 
     @Override
     public ElasticsearchSecurityException unsuccessfulAuthentication(final RestRequest request, final AuthenticationToken token) {

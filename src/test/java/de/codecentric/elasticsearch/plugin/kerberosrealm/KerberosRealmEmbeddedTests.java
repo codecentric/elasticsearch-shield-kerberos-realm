@@ -17,22 +17,12 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-
-import java.io.File;
-import java.net.URL;
-
-import javax.security.auth.login.LoginException;
-
+import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.client.MockingKerberizedClient;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.SettingConstants;
 import net.sourceforge.spnego.SpnegoHttpURLConnection;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.kerby.kerberos.kerb.spec.ticket.TgtTicket;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
@@ -50,11 +40,12 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.client.MockingKerberizedClient;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.SettingConstants;
+import javax.security.auth.login.LoginException;
+import java.io.File;
+import java.net.URL;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
 
 /**
  * Integration test to test authentication with the custom realm. This test is run against an external cluster that is launched

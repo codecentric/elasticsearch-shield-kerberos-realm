@@ -17,8 +17,6 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
 
-import java.io.File;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.kerby.kerberos.kdc.impl.NettyKdcServerImpl;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
@@ -26,32 +24,13 @@ import org.apache.kerby.kerberos.kerb.spec.ticket.TgtTicket;
 import org.apache.kerby.util.NetworkUtil;
 import org.elasticsearch.common.SuppressForbidden;
 
+import java.io.File;
+
 @SuppressForbidden(reason = "unit test")
 public class EmbeddedKRBServer {
 
     private SimpleKdcServer simpleKdcServer;
     private String realm = "CCK.COM";
-
-    public void start(final File workDir) throws Exception {
-        simpleKdcServer = new SimpleKdcServer();
-        simpleKdcServer.enableDebug();
-        simpleKdcServer.setKdcTcpPort(NetworkUtil.getServerPort());
-        simpleKdcServer.setKdcUdpPort(NetworkUtil.getServerPort());
-        simpleKdcServer.setAllowTcp(true);
-        simpleKdcServer.setAllowUdp(true);
-        simpleKdcServer.setKdcRealm(realm);
-        simpleKdcServer.setKdcHost("localhost");
-        FileUtils.forceMkdir(workDir);
-        simpleKdcServer.setWorkDir(workDir);
-        simpleKdcServer.setInnerKdcImpl(new NettyKdcServerImpl(simpleKdcServer.getKdcSetting()));
-        simpleKdcServer.init();
-        //System.setErr(new PrintStream(new NullOutputStream()));
-        simpleKdcServer.start();
-    }
-
-    public SimpleKdcServer getSimpleKdcServer() {
-        return simpleKdcServer;
-    }
 
     public static void main(final String[] args) throws Exception {
         final File workDir = new File(".");
@@ -86,5 +65,26 @@ public class EmbeddedKRBServer {
         } catch (final Exception e) {
             System.out.println("Unable to copy generated krb5.conf to /etc diúe to " + e.getMessage());
         }
+    }
+
+    public void start(final File workDir) throws Exception {
+        simpleKdcServer = new SimpleKdcServer();
+        simpleKdcServer.enableDebug();
+        simpleKdcServer.setKdcTcpPort(NetworkUtil.getServerPort());
+        simpleKdcServer.setKdcUdpPort(NetworkUtil.getServerPort());
+        simpleKdcServer.setAllowTcp(true);
+        simpleKdcServer.setAllowUdp(true);
+        simpleKdcServer.setKdcRealm(realm);
+        simpleKdcServer.setKdcHost("localhost");
+        FileUtils.forceMkdir(workDir);
+        simpleKdcServer.setWorkDir(workDir);
+        simpleKdcServer.setInnerKdcImpl(new NettyKdcServerImpl(simpleKdcServer.getKdcSetting()));
+        simpleKdcServer.init();
+        //System.setErr(new PrintStream(new NullOutputStream()));
+        simpleKdcServer.start();
+    }
+
+    public SimpleKdcServer getSimpleKdcServer() {
+        return simpleKdcServer;
     }
 }

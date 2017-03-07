@@ -17,8 +17,11 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
-import java.nio.file.Paths;
-
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.rest.LoginInfoRestAction;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
@@ -27,18 +30,14 @@ import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.rest.RestModule;
 import org.elasticsearch.shield.authc.AuthenticationModule;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.rest.LoginInfoRestAction;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
+import java.nio.file.Paths;
 
 /**
  */
 public class KerberosRealmPlugin extends Plugin {
 
-    protected final ESLogger logger = Loggers.getLogger(this.getClass());
     private static final String CLIENT_TYPE = "client.type";
+    private final ESLogger logger = Loggers.getLogger(this.getClass());
     private final boolean client;
     private final Settings settings;
 

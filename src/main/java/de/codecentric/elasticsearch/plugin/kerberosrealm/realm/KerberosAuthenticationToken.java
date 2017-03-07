@@ -17,20 +17,20 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import java.util.Objects;
-
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.shield.authc.AuthenticationToken;
 
+import java.util.Objects;
+
 public class KerberosAuthenticationToken implements AuthenticationToken {
 
     static final KerberosAuthenticationToken LIVENESS_TOKEN = new KerberosAuthenticationToken(new byte[]{1,2,3}, "LIVENESS_TOKEN");
-    protected final ESLogger logger = Loggers.getLogger(this.getClass());
-    private byte[] outToken;
+    private final ESLogger logger = Loggers.getLogger(this.getClass());
     private final String principal;
+    private byte[] outToken;
 
-    public KerberosAuthenticationToken(final byte[] outToken, final String principal) {
+    KerberosAuthenticationToken(final byte[] outToken, final String principal) {
         super();
         this.outToken = Objects.requireNonNull(outToken);
         this.principal = Objects.requireNonNull(principal);

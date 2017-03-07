@@ -21,13 +21,8 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.rest.BaseRestHandler;
-import org.elasticsearch.rest.BytesRestResponse;
-import org.elasticsearch.rest.RestChannel;
-import org.elasticsearch.rest.RestController;
-import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.rest.*;
 import org.elasticsearch.rest.RestRequest.Method;
-import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.shield.User;
 
 public class LoginInfoRestAction extends BaseRestHandler {
@@ -40,11 +35,11 @@ public class LoginInfoRestAction extends BaseRestHandler {
 
     @Override
     protected void handleRequest(final RestRequest request, final RestChannel channel, final Client client) throws Exception {
-        BytesRestResponse response = null;
+        BytesRestResponse response;
         final XContentBuilder builder = channel.newBuilder();
         try {
             builder.startObject();
-            final User user = ((User) request.getFromContext("_shield_user"));
+            final User user = request.getFromContext("_shield_user");
             if (user != null) {
                 builder.field("principal", user.principal());
                 builder.field("roles", user.roles());

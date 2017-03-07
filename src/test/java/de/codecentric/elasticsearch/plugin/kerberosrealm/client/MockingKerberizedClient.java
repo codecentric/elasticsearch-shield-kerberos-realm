@@ -17,23 +17,16 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.client;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-
-import javax.security.auth.Subject;
-import javax.xml.bind.DatatypeConverter;
-
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.SuppressForbidden;
-import org.ietf.jgss.ChannelBinding;
-import org.ietf.jgss.GSSContext;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSName;
-import org.ietf.jgss.MessageProp;
-import org.ietf.jgss.Oid;
+import org.ietf.jgss.*;
+
+import javax.security.auth.Subject;
+import javax.xml.bind.DatatypeConverter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 @SuppressForbidden(reason = "unit test")
 public class MockingKerberizedClient extends KerberizedClient {

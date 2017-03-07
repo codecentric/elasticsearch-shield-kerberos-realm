@@ -17,39 +17,29 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.client;
 
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ElasticsearchSecurityException;
+import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.action.*;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.FilterClient;
+import org.elasticsearch.common.SuppressForbidden;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
+import org.ietf.jgss.*;
+
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
+import javax.xml.bind.DatatypeConverter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginException;
-import javax.xml.bind.DatatypeConverter;
-
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.ElasticsearchSecurityException;
-import org.elasticsearch.ExceptionsHelper;
-import org.elasticsearch.action.Action;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ActionRequest;
-import org.elasticsearch.action.ActionRequestBuilder;
-import org.elasticsearch.action.ActionResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.FilterClient;
-import org.elasticsearch.common.SuppressForbidden;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
-import org.ietf.jgss.GSSContext;
-import org.ietf.jgss.GSSCredential;
-import org.ietf.jgss.GSSException;
-import org.ietf.jgss.GSSManager;
-import org.ietf.jgss.GSSName;
-
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 
 /**
  * 
@@ -58,7 +48,7 @@ import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
  */
 public class KerberizedClient extends FilterClient {
 
-    protected final ESLogger logger = Loggers.getLogger(this.getClass());
+    private final ESLogger logger = Loggers.getLogger(this.getClass());
     private final Subject initiatorSubject;
     private final String acceptorPrincipal;
 
@@ -154,6 +144,36 @@ public class KerberizedClient extends FilterClient {
         super.doExecute(action, request, newListener);
     }
 
+    void addAdditionalHeader(final ActionRequest<ActionRequest> request, final int count, final byte[] data) {
+
+    }
+
+    GSSContext initGSS() throws Exception {
+        final GSSManager MANAGER = GSSManager.getInstance();
+
+        final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
+            @Override
+            public GSSCredential run() throws GSSException {
+                return MANAGER.createCredential(null, GSSCredential.DEFAULT_LIFETIME, KrbConstants.SPNEGO, GSSCredential.INITIATE_ONLY);
+            }
+        };
+
+        final GSSCredential clientcreds = Subject.doAs(initiatorSubject, action);
+
+        final GSSContext context = MANAGER.createContext(MANAGER.createName(acceptorPrincipal, GSSName.NT_USER_NAME, KrbConstants.SPNEGO),
+                KrbConstants.SPNEGO, clientcreds, GSSContext.DEFAULT_LIFETIME);
+
+        //TODO make configurable
+        context.requestMutualAuth(true);
+        context.requestConf(true);
+        context.requestInteg(true);
+        context.requestReplayDet(true);
+        context.requestSequenceDet(true);
+        context.requestCredDeleg(false);
+
+        return context;
+    }
+
     private class KerberosActionListener implements ActionListener<ActionResponse> {
         private final ActionListener inner;
         private final Action action;
@@ -234,44 +254,12 @@ public class KerberizedClient extends FilterClient {
 
                     } catch (final Exception e1) {
                         inner.onFailure(e);
-                        return;
                     }
                 }
             } else {
                 inner.onFailure(e);
-                return;
             }
         }
 
-    }
-
-    void addAdditionalHeader(final ActionRequest<ActionRequest> request, final int count, final byte[] data) {
-
-    }
-
-    GSSContext initGSS() throws Exception {
-        final GSSManager MANAGER = GSSManager.getInstance();
-
-        final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
-            @Override
-            public GSSCredential run() throws GSSException {
-                return MANAGER.createCredential(null, GSSCredential.DEFAULT_LIFETIME, KrbConstants.SPNEGO, GSSCredential.INITIATE_ONLY);
-            }
-        };
-
-        final GSSCredential clientcreds = Subject.doAs(initiatorSubject, action);
-
-        final GSSContext context = MANAGER.createContext(MANAGER.createName(acceptorPrincipal, GSSName.NT_USER_NAME, KrbConstants.SPNEGO),
-                KrbConstants.SPNEGO, clientcreds, GSSContext.DEFAULT_LIFETIME);
-
-        //TODO make configurable
-        context.requestMutualAuth(true);
-        context.requestConf(true);
-        context.requestInteg(true);
-        context.requestReplayDet(true);
-        context.requestSequenceDet(true);
-        context.requestCredDeleg(false);
-
-        return context;
     }
 }

@@ -22,8 +22,6 @@ import org.elasticsearch.shield.ShieldSettingsFilter;
 import org.elasticsearch.shield.authc.Realm;
 import org.elasticsearch.shield.authc.RealmConfig;
 
-/**
- */
 public class KerberosRealmFactory extends Realm.Factory<KerberosRealm> {
 
     private final ShieldSettingsFilter settingsFilter;

@@ -17,20 +17,12 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
-import static org.elasticsearch.common.settings.Settings.settingsBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.Principal;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.EmbeddedKRBServer;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
@@ -61,7 +53,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.license.plugin.LicensePlugin;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.node.PluginEnabledNode;
 import org.elasticsearch.shield.ShieldPlugin;
 import org.junit.After;
@@ -72,19 +63,25 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.Principal;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.EmbeddedKRBServer;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
+import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
 @SuppressForbidden(reason = "unit test")
 public abstract class AbstractUnitTest {
 
-    public static boolean debugAll = false;
-    protected static String PREFIX = "shield.authc.realms.cc-kerberos.";
+    static String PREFIX = "shield.authc.realms.cc-kerberos.";
+    private static boolean debugAll = false;
 
     static {
         System.out.println("OS: " + System.getProperty("os.name") + " " + System.getProperty("os.arch") + " "
@@ -101,23 +98,6 @@ public abstract class AbstractUnitTest {
             JaasKrbUtil.ENABLE_DEBUG = true;
         }
     }
-
-    @Rule
-    public TestName name = new TestName();
-    protected final String clustername = "kerberos_testcluster";
-    protected int elasticsearchHttpPort1;
-    private int elasticsearchHttpPort2;
-    private int elasticsearchHttpPort3;
-    //public int elasticsearchNodePort1;
-    //public int elasticsearchNodePort2;
-    //public int elasticsearchNodePort3;
-
-    private Node esNode1;
-    private Node esNode2;
-    private Node esNode3;
-    private Client client;
-    protected final ESLogger log = Loggers.getLogger(this.getClass());
-    protected final EmbeddedKRBServer embeddedKrbServer = new EmbeddedKRBServer();
 
     @Rule
     public final TestWatcher testWatcher = new TestWatcher() {
@@ -143,13 +123,26 @@ public abstract class AbstractUnitTest {
         }
 
     };
+    final String clustername = "kerberos_testcluster";
+    final EmbeddedKRBServer embeddedKrbServer = new EmbeddedKRBServer();
+    //public int elasticsearchNodePort1;
+    //public int elasticsearchNodePort2;
+    //public int elasticsearchNodePort3;
+    private final ESLogger log = Loggers.getLogger(this.getClass());
+    @Rule
+    public TestName name = new TestName();
+    private int elasticsearchHttpPort1;
+    private Node esNode1;
+    private Node esNode2;
+    private Node esNode3;
+    private Client client;
 
-    protected AbstractUnitTest() {
+    AbstractUnitTest() {
         super();
     }
 
-    private Settings.Builder getDefaultSettingsBuilder(final int nodenum, final int nodePort, final int httpPort, final boolean dataNode,
-            final boolean masterNode) {
+    private Settings.Builder getDefaultSettingsBuilder(final int nodenum, final int httpPort, final boolean dataNode,
+                                                       final boolean masterNode) {
 
         // @formatter:off
         return settingsBuilder()
@@ -171,13 +164,13 @@ public abstract class AbstractUnitTest {
         // @formatter:on
     }
 
-    protected final String getServerUri() {
+    final String getServerUri() {
         final String address = "http://localhost:" + elasticsearchHttpPort1;
         log.debug("Connect to {}", address);
         return address;
     }
 
-    public final void startES(final Settings settings) throws Exception {
+    final void startES(final Settings settings) throws Exception {
         FileUtils.copyFileToDirectory(getAbsoluteFilePathFromClassPath("roles.yml").toFile(), new File("testtmp/config/shield"));
 
         final Set<Integer> ports = new HashSet<>();
@@ -188,21 +181,21 @@ public abstract class AbstractUnitTest {
         final Iterator<Integer> portIt = ports.iterator();
 
         elasticsearchHttpPort1 = portIt.next();
-        elasticsearchHttpPort2 = portIt.next();
-        elasticsearchHttpPort3 = portIt.next();
+        int elasticsearchHttpPort2 = portIt.next();
+        int elasticsearchHttpPort3 = portIt.next();
 
         //elasticsearchNodePort1 = portIt.next();
         //elasticsearchNodePort2 = portIt.next();
         //elasticsearchNodePort3 = portIt.next();
 
-        esNode1 = new PluginEnabledNode(getDefaultSettingsBuilder(1, 0, elasticsearchHttpPort1, false, true).put(
+        esNode1 = new PluginEnabledNode(getDefaultSettingsBuilder(1, elasticsearchHttpPort1, false, true).put(
                 settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build(), Lists.newArrayList(ShieldPlugin.class, LicensePlugin.class, KerberosRealmPlugin.class)).start();
         client = esNode1.client();
-        
-        esNode2 = new PluginEnabledNode(getDefaultSettingsBuilder(2, 0, elasticsearchHttpPort2, true, true).put(
+
+        esNode2 = new PluginEnabledNode(getDefaultSettingsBuilder(2, elasticsearchHttpPort2, true, true).put(
                 settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build(), Lists.newArrayList(ShieldPlugin.class, LicensePlugin.class, KerberosRealmPlugin.class)).start();
-        
-        esNode3 = new PluginEnabledNode(getDefaultSettingsBuilder(3, 0, elasticsearchHttpPort3, true, false).put(
+
+        esNode3 = new PluginEnabledNode(getDefaultSettingsBuilder(3, elasticsearchHttpPort3, true, false).put(
                 settings == null ? Settings.Builder.EMPTY_SETTINGS : settings).build(), Lists.newArrayList(ShieldPlugin.class, LicensePlugin.class, KerberosRealmPlugin.class)).start();
         
         waitForGreenClusterState();
@@ -279,15 +272,14 @@ public abstract class AbstractUnitTest {
 
         hcb.setDefaultCredentialsProvider(credsProvider);
         hcb.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(10 * 1000).build());
-        final CloseableHttpClient httpClient = hcb.build();
-        return httpClient;
+        return hcb.build();
     }
 
-    protected void waitForGreenClusterState() throws IOException {
+    private void waitForGreenClusterState() throws IOException {
         waitForCluster(ClusterHealthStatus.GREEN, TimeValue.timeValueSeconds(30));
     }
 
-    protected void waitForCluster(final ClusterHealthStatus status, final TimeValue timeout) throws IOException {
+    private void waitForCluster(final ClusterHealthStatus status, final TimeValue timeout) throws IOException {
         try {
             log.debug("waiting for cluster state {}", status.name());
             final ClusterHealthResponse healthResponse = client.admin().cluster().prepareHealth().setWaitForStatus(status)
@@ -303,25 +295,12 @@ public abstract class AbstractUnitTest {
         }
     }
 
-    private static class JaasCredentials implements Credentials {
-
-        @Override
-        public String getPassword() {
-            return null;
-        }
-
-        @Override
-        public Principal getUserPrincipal() {
-            return null;
-        }
-    }
-
-    protected Client client() {
+    Client client() {
         return client;
     }
 
     private Path getAbsoluteFilePathFromClassPath(final String fileNameFromClasspath) {
-        Path path = null;
+        Path path;
         final URL fileUrl = PropertyUtil.class.getClassLoader().getResource(fileNameFromClasspath);
         if (fileUrl != null) {
             try {
@@ -342,5 +321,18 @@ public abstract class AbstractUnitTest {
             log.error("Failed to load " + fileNameFromClasspath);
         }
         return null;
+    }
+
+    private static class JaasCredentials implements Credentials {
+
+        @Override
+        public String getPassword() {
+            return null;
+        }
+
+        @Override
+        public Principal getUserPrincipal() {
+            return null;
+        }
     }
 }
