@@ -20,14 +20,12 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.rest.LoginInfoRestAction;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.Plugin;
-import org.elasticsearch.rest.RestModule;
 import org.elasticsearch.shield.authc.AuthenticationModule;
 
 import java.nio.file.Paths;
@@ -55,12 +53,6 @@ public class KerberosRealmPlugin extends Plugin {
     @Override
     public String description() {
         return "codecentric AG Kerberos V5 Realm";
-    }
-    
-    public void onModule(final RestModule module) {
-        if (!client) {
-            module.addRestAction(LoginInfoRestAction.class);
-        }
     }
 
     @SuppressForbidden(reason = "proper use of Paths.get()")

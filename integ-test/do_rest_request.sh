@@ -5,4 +5,4 @@ echo "Password is: lukepwd"
 kinit luke@EXAMPLE.COM || { echo 'kinit failed' ; exit -1; }
 curl -vvv --negotiate  -u : "http://localhost:9200/?pretty"
 curl -vvv --negotiate  -u : "http://localhost:9200/_cluster/health?pretty"
-curl -vvv --negotiate  -u : "http://localhost:9200/_logininfo?pretty"
+curl -vvv --negotiate  -u : "http://localhost:9200/_shield/authenticate?pretty"
