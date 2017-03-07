@@ -6,14 +6,14 @@ TMP=target/integ_test_tmp
 rm -rf $TMP
 mkdir -p $TMP
 cd $TMP
-wget https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.3.5/elasticsearch-2.3.5.tar.gz
-tar -xzf elasticsearch-2.3.5.tar.gz
-cd elasticsearch-2.3.5
+wget https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.4.4/elasticsearch-2.4.4.tar.gz
+tar -xzf elasticsearch-2.4.4.tar.gz
+cd elasticsearch-2.4.4
 bin/plugin install license
 bin/plugin install shield
 bin/shield/syskeygen
 bin/plugin remove elasticsearch-shield-kerberos-realm 
-bin/plugin install file:///$DIR/../target/releases/elasticsearch-shield-kerberos-realm-2.3.5.zip
+bin/plugin install file:///$DIR/../target/releases/elasticsearch-shield-kerberos-realm-2.4.4.zip
 echo "shield.authc.realms.kerb.type: cc-kerberos" > config/elasticsearch.yml
 echo "shield.authc.realms.kerb.order: 0"  >> config/elasticsearch.yml
 echo "shield.authc.realms.kerb.acceptor_keytab_path: $DIR/../../kerby-dist/kdc-dist-1.0.0-RC1/http.keytab"  >> config/elasticsearch.yml

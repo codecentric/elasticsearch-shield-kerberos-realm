@@ -99,10 +99,6 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
         }
     }
 
-    /*protected KerberosRealm(final String type, final RealmConfig config) {
-        this(config);
-    }*/
-
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
     private static String getUsernameFromGSSContext(final GSSContext gssContext, final boolean strip, final ESLogger logger) {
         if (gssContext.isEstablished()) {
