@@ -14,7 +14,8 @@
 
     <properties>
         <!-- define the plugin classname so it can be put in the descriptor -->
-        <elasticsearch.plugin.classname>de.codecentric.elasticsearch.plugin.kerberosrealm.KerberosRealmPlugin</elasticsearch.plugin.classname>
+        <elasticsearch.plugin.classname>de.codecentric.elasticsearch.plugin.kerberosrealm.KerberosRealmPlugin
+        </elasticsearch.plugin.classname>
         <!-- this plugin cannot be isolated since it needs to directly interact
             with Shield -->
         <elasticsearch.plugin.isolated>false</elasticsearch.plugin.isolated>
@@ -248,6 +249,34 @@
                 <groupId>org.eluder.coveralls</groupId>
                 <artifactId>coveralls-maven-plugin</artifactId>
                 <version>4.1.0</version>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.20.0</version>
+
+                <configuration>
+                    <images>
+                        <image>
+                            <name>elasticsearch:2.4.4-kerberos</name>
+
+                            <build>
+                                <from>elasticsearch:2.4.4-alpine</from>
+
+                                <assembly>
+                                    <descriptor>plugin-assembly.xml</descriptor>
+                                    <targetDir>/usr/share/elasticsearch/plugins/elasticsearch-shield-kerberos-realm
+                                    </targetDir>
+                                </assembly>
+                                <runCmds>
+                                    <run>bin/plugin install license</run>
+                                    <run>bin/plugin install shield</run>
+                                </runCmds>
+                            </build>
+                        </image>
+                    </images>
+                    <sourceDirectory>target/dev-tools/plugin-metadata</sourceDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>
