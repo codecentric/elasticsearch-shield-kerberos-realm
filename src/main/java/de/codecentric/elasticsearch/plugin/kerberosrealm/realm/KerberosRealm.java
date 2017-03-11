@@ -94,7 +94,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
         acceptorKeyTabPath = env.configFile().resolve(acceptorKeyTab);
 
-        if (!mockMode && (!Files.isReadable(acceptorKeyTabPath) && !Files.isDirectory(acceptorKeyTabPath))) {
+        if (!mockMode && (!Files.isReadable(acceptorKeyTabPath) || Files.isDirectory(acceptorKeyTabPath))) {
             throw new ElasticsearchException("File not found or not readable: {}", acceptorKeyTabPath.toAbsolutePath());
         }
     }

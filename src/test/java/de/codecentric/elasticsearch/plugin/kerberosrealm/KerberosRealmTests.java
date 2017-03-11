@@ -57,7 +57,10 @@ public class KerberosRealmTests extends ESTestCase {
     }
 
     @Test
-    public void should_not_throw_elasticsearch_exception_when_acceptor_keytab_is_a_directory() {
+    public void should_throw_elasticsearch_exception_when_acceptor_keytab_is_a_directory() {
+        expectedExcpetion.expect(ElasticsearchException.class);
+        expectedExcpetion.expectMessage("File not found or not readable");
+
         Path tempDir = createTempDir();
         Settings globalSettings = Settings.builder().put("path.home", tempDir).build();
         Settings realmSettings = Settings.builder()
