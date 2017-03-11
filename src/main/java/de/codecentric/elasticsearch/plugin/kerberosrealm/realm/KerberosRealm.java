@@ -65,7 +65,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     private final ListMultimap<String, String> rolesMap = ArrayListMultimap.create();
     private final boolean mockMode;
 
-    KerberosRealm(final RealmConfig config) {
+    public KerberosRealm(final RealmConfig config) {
         super(TYPE, config);
         stripRealmFromPrincipalName = config.settings().getAsBoolean(SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true);
         acceptorPrincipal = config.settings().get(SettingConstants.ACCEPTOR_PRINCIPAL, null);
