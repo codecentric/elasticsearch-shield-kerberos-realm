@@ -5,6 +5,7 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;
 import org.elasticsearch.test.ESTestCase;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -16,12 +17,20 @@ public class KerberosRealmTests extends ESTestCase {
     @Rule
     public ExpectedException expectedExcpetion = ExpectedException.none();
 
+    private Path tempDirPath;
+    private Settings globalSettings;
+
+    @Before
+    public void before() {
+        tempDirPath = createTempDir("tempdir-unittest");
+        globalSettings = Settings.builder().put("path.home", tempDirPath).build();
+    }
+
     @Test
     public void should_throw_elasticsearch_exception_when_acceptor_principal_is_missing() {
         expectedExcpetion.expect(ElasticsearchException.class);
         expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_principal");
 
-        Settings globalSettings = Settings.builder().put("path.home", createTempDir()).build();
         Settings realmSettings = Settings.builder()
                 .put("type", KerberosRealm.TYPE)
                 .put("acceptor_keytab_path", "")
@@ -34,7 +43,6 @@ public class KerberosRealmTests extends ESTestCase {
         expectedExcpetion.expect(ElasticsearchException.class);
         expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_keytab_path");
 
-        Settings globalSettings = Settings.builder().put("path.home", createTempDir()).build();
         Settings realmSettings = Settings.builder()
                 .put("type", KerberosRealm.TYPE)
                 .put("acceptor_principal", "")
@@ -47,7 +55,6 @@ public class KerberosRealmTests extends ESTestCase {
         expectedExcpetion.expect(ElasticsearchException.class);
         expectedExcpetion.expectMessage("File not found or not readable");
 
-        Settings globalSettings = Settings.builder().put("path.home", createTempDir()).build();
         Settings realmSettings = Settings.builder()
                 .put("type", KerberosRealm.TYPE)
                 .put("acceptor_keytab_path", "")
@@ -61,11 +68,9 @@ public class KerberosRealmTests extends ESTestCase {
         expectedExcpetion.expect(ElasticsearchException.class);
         expectedExcpetion.expectMessage("File not found or not readable");
 
-        Path tempDir = createTempDir();
-        Settings globalSettings = Settings.builder().put("path.home", tempDir).build();
         Settings realmSettings = Settings.builder()
                 .put("type", KerberosRealm.TYPE)
-                .put("acceptor_keytab_path", tempDir.toAbsolutePath())
+                .put("acceptor_keytab_path", tempDirPath.toAbsolutePath())
                 .put("acceptor_principal", "")
                 .build();
         new KerberosRealm(new RealmConfig("test", realmSettings, globalSettings));
