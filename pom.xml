@@ -23,6 +23,7 @@
         <plugins.list>license,shield,elasticsearch-shield-kerberos-realm</plugins.list>
         <xlint.options>-Xlint:-rawtypes</xlint.options>
         <skip.integ.tests>true</skip.integ.tests>
+        <tests.jvms>1</tests.jvms>
     </properties>
 
     <repositories>
@@ -199,6 +200,16 @@
                 <groupId>org.eluder.coveralls</groupId>
                 <artifactId>coveralls-maven-plugin</artifactId>
                 <version>4.1.0</version>
+            </plugin>
+            <plugin>
+                <groupId>com.carrotsearch.randomizedtesting</groupId>
+                <artifactId>junit4-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>integ-tests</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>io.fabric8</groupId>
