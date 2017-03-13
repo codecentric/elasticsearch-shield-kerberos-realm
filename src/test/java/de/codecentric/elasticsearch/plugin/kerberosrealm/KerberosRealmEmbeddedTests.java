@@ -53,6 +53,7 @@ import static org.junit.Assert.*;
  */
 
 @SuppressForbidden(reason = "unit test")
+@Ignore
 public class KerberosRealmEmbeddedTests extends AbstractUnitTest {
 
     @Test
