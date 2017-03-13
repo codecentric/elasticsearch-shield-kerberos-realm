@@ -5,5 +5,8 @@ jdk:
   - oraclejdk7
   - oraclejdk8
 
+services:
+  - docker
+
 after_success:
   - mvn clean test jacoco:report coveralls:report -Pcoverage -Dmaven.build.timestamp.format=yyMMddHHmm

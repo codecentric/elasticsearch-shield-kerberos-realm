@@ -23,7 +23,6 @@
         <plugins.list>license,shield,elasticsearch-shield-kerberos-realm</plugins.list>
         <xlint.options>-Xlint:-rawtypes</xlint.options>
         <skip.integ.tests>true</skip.integ.tests>
-        <tests.jvms>1</tests.jvms>
     </properties>
 
     <repositories>
@@ -151,28 +150,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>integ-setup-dependencies</id>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>check-license</id>
-                        <phase>none</phase>
-                    </execution>
-                    <execution>
-                        <id>integ-setup</id>
-                        <phase>none</phase>
-                    </execution>
-                    <execution>
-                        <id>integ-teardown</id>
                         <phase>none</phase>
                     </execution>
                 </executions>
@@ -202,16 +183,6 @@
                 <version>4.1.0</version>
             </plugin>
             <plugin>
-                <groupId>com.carrotsearch.randomizedtesting</groupId>
-                <artifactId>junit4-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>integ-tests</id>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.20.0</version>
@@ -223,7 +194,8 @@
                                 <from>elasticsearch:2.4.4-alpine</from>
                                 <assembly>
                                     <descriptor>plugin-assembly.xml</descriptor>
-                                    <targetDir>${elasticsearch.tools.directory}/plugin-metadata</targetDir>
+                                    <targetDir>/usr/share/elasticsearch/plugins/elasticsearch-shield-kerberos-realm
+                                    </targetDir>
                                 </assembly>
                                 <runCmds>
                                     <run>bin/plugin install license</run>
@@ -231,10 +203,67 @@
                                 </runCmds>
                                 <optimise>true</optimise>
                             </build>
+                            <run>
+                                <ports>
+                                    <port>${elasticsearch.host}:${elasticsearch.port}:9200</port>
+                                </ports>
+                                <volumes>
+                                    <bind>
+                                        <volume>
+                                            ${project.basedir}/src/test/resources/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+                                        </volume>
+                                        <volume>
+                                            ${project.basedir}/src/test/resources/kerberos:/usr/share/elasticsearch/config/kerberos
+                                        </volume>
+                                    </bind>
+                                </volumes>
+                                <wait>
+                                    <log>started</log>
+                                    <time>10000</time>
+                                </wait>
+                            </run>
                         </image>
                     </images>
                     <sourceDirectory>target/dev-tools/plugin-metadata</sourceDirectory>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>start</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <skip>false</skip>
+                    <systemPropertyVariables>
+                        <elasticsearch.url>http://${elasticsearch.host}:${elasticsearch.port}</elasticsearch.url>
+                    </systemPropertyVariables>
+                    <failIfNoTests>true</failIfNoTests>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
