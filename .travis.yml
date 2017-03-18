@@ -1,6 +1,8 @@
 language: java
 sudo: true
 
+install: true
+
 jdk:
   - oraclejdk7
   - oraclejdk8
