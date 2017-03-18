@@ -149,16 +149,6 @@
                 <artifactId>maven-assembly-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>check-license</id>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
@@ -181,6 +171,29 @@
                 <groupId>org.eluder.coveralls</groupId>
                 <artifactId>coveralls-maven-plugin</artifactId>
                 <version>4.1.0</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>check-license</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <phase>test</phase>
+                        <configuration>
+                            <tasks>
+                                <touch file="${project.build.directory}/jacoco-it.exec"/>
+                                <chmod file="${project.build.directory}/jacoco-it.exec" perm="777"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>io.fabric8</groupId>
@@ -215,12 +228,22 @@
                                         <volume>
                                             ${project.basedir}/src/test/resources/kerberos:/usr/share/elasticsearch/config/kerberos
                                         </volume>
+                                        <volume>
+                                            ${project.basedir}/jacocoagent.jar:/jacocoagent.jar
+                                        </volume>
+                                        <volume>
+                                            ${project.build.directory}/jacoco-it.exec:/tmp/jacoco-it.exec
+                                        </volume>
                                     </bind>
                                 </volumes>
                                 <wait>
                                     <log>started</log>
                                     <time>10000</time>
                                 </wait>
+                                <env>
+                                    <ES_JAVA_OPTS>-javaagent:/jacocoagent.jar=destfile=/tmp/jacoco-it.exec
+                                    </ES_JAVA_OPTS>
+                                </env>
                             </run>
                         </image>
                     </images>
@@ -240,6 +263,20 @@
                         <phase>post-integration-test</phase>
                         <goals>
                             <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>report-integration</goal>
                         </goals>
                     </execution>
                 </executions>
