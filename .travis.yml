@@ -7,10 +7,11 @@ jdk:
   - oraclejdk7
   - oraclejdk8
 
-script: mvn clean verify -Ddocker.showLogs -B
+script: mvn clean verify -Pcoverage -Ddocker.showLogs -B
 
 services:
   - docker
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+  - mvn coveralls:report -Pcoverage -Dmaven.build.timestamp.format=yyMMddHHmm
