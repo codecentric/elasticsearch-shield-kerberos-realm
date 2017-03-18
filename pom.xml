@@ -185,8 +185,8 @@
                         <phase>test</phase>
                         <configuration>
                             <tasks>
-                                <touch file="${project.build.directory}/jacoco-it.exec"/>
-                                <chmod file="${project.build.directory}/jacoco-it.exec" perm="777"/>
+                                <touch file="${project.build.directory}/jacoco.exec"/>
+                                <chmod file="${project.build.directory}/jacoco.exec" perm="777"/>
                             </tasks>
                         </configuration>
                         <goals>
@@ -232,7 +232,7 @@
                                             ${project.basedir}/jacocoagent.jar:/jacocoagent.jar
                                         </volume>
                                         <volume>
-                                            ${project.build.directory}/jacoco-it.exec:/tmp/jacoco-it.exec
+                                            ${project.build.directory}/jacoco.exec:/tmp/jacoco.exec
                                         </volume>
                                     </bind>
                                 </volumes>
@@ -241,8 +241,7 @@
                                     <time>20000</time>
                                 </wait>
                                 <env>
-                                    <ES_JAVA_OPTS>-javaagent:/jacocoagent.jar=destfile=/tmp/jacoco-it.exec
-                                    </ES_JAVA_OPTS>
+                                    <ES_JAVA_OPTS>-javaagent:/jacocoagent.jar=destfile=/tmp/jacoco.exec</ES_JAVA_OPTS>
                                 </env>
                             </run>
                         </image>
@@ -263,20 +262,6 @@
                         <phase>post-integration-test</phase>
                         <goals>
                             <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.version}</version>
-                <executions>
-                    <execution>
-                        <id>post-integration-test</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>report-integration</goal>
                         </goals>
                     </execution>
                 </executions>
