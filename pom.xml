@@ -238,7 +238,7 @@
                                 </volumes>
                                 <wait>
                                     <log>started</log>
-                                    <time>10000</time>
+                                    <time>20000</time>
                                 </wait>
                                 <env>
                                     <ES_JAVA_OPTS>-javaagent:/jacocoagent.jar=destfile=/tmp/jacoco-it.exec

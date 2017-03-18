@@ -7,6 +7,8 @@ jdk:
   - oraclejdk7
   - oraclejdk8
 
+script: mvn clean verify -Ddocker.showLogs -B
+
 services:
   - docker
 
