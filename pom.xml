@@ -239,6 +239,7 @@
                                 <wait>
                                     <log>started</log>
                                     <time>20000</time>
+                                    <kill>5000</kill>
                                 </wait>
                                 <env>
                                     <ES_JAVA_OPTS>-javaagent:/jacocoagent.jar=destfile=/tmp/jacoco-it.exec
