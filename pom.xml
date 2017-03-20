@@ -197,6 +197,19 @@
                 <configuration>
                     <images>
                         <image>
+                            <name>alpine:kdc</name>
+                            <build>
+                                <from>alpine:3.5</from>
+                                <runCmds>
+                                    <run>apk add --no-cache krb5-server</run>
+                                    <run>kdb5_util -P masterkey -r LOCALHOST create -s</run>
+                                    <run>kadmin.local -r LOCALHOST -q "addprinc -pw password HTTP/localhost@LOCALHOST"</run>
+                                    <run>kadmin.local -r LOCALHOST -q "addprinc -pw password user@LOCALHOST"</run>
+                                </runCmds>
+                                <entryPoint>syslogd &amp;&amp; krb5kdc -r LOCALHOST &amp;&amp; tail -F /var/log/messages</entryPoint>
+                            </build>
+                        </image>
+                        <image>
                             <name>elasticsearch:2.4.4-kerberos</name>
                             <build>
                                 <from>elasticsearch:2.4.4-alpine</from>
