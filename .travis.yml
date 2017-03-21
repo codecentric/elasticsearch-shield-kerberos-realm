@@ -13,4 +13,4 @@ services:
   - docker
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash -c)
+  - bash <(curl -s https://codecov.io/bash)
