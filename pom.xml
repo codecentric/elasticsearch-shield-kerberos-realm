@@ -208,6 +208,11 @@
                                 </runCmds>
                                 <entryPoint>syslogd &amp;&amp; krb5kdc -r LOCALHOST &amp;&amp; tail -F /var/log/messages</entryPoint>
                             </build>
+                            <run>
+                                <ports>
+                                    <port>${kdc.host}:88:88/udp</port>
+                                </ports>
+                            </run>
                         </image>
                         <image>
                             <name>elasticsearch:2.4.4-kerberos</name>
@@ -226,7 +231,8 @@
                             </build>
                             <run>
                                 <ports>
-                                    <port>${elasticsearch.host}:${elasticsearch.port}:9200</port>
+                                    <port>${elasticsearch.host}:${elasticsearch.rest-port}:9200</port>
+                                    <port>${elasticsearch.host}:${elasticsearch.transport-port}:9300</port>
                                 </ports>
                                 <volumes>
                                     <bind>
@@ -283,7 +289,11 @@
                 <configuration>
                     <skip>false</skip>
                     <systemPropertyVariables>
-                        <elasticsearch.url>http://${elasticsearch.host}:${elasticsearch.port}</elasticsearch.url>
+                        <elasticsearch.rest.url>http://${elasticsearch.host}:${elasticsearch.rest-port}</elasticsearch.rest.url>
+                        <elasticsearch.host>${elasticsearch.host}</elasticsearch.host>
+                        <elasticsearch.transport.port>${elasticsearch.transport-port}</elasticsearch.transport.port>
+                        <java.security.krb5.realm>LOCALHOST</java.security.krb5.realm>
+                        <java.security.krb5.kdc>${kdc.host}:88</java.security.krb5.kdc>
                     </systemPropertyVariables>
                     <failIfNoTests>true</failIfNoTests>
                 </configuration>

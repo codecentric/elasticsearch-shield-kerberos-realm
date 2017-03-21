@@ -4,8 +4,8 @@ shield.authc.realms.kerb:
   type: cc-kerberos
   order: 0
   acceptor_keytab_path: /usr/share/elasticsearch/config/kerberos/krb5.keytab
-  acceptor_principal: HTTP/localhost@EXAMPLE.COM
-  roles.admin.0: luke@EXAMPLE.COM
+  acceptor_principal: HTTP/localhost@LOCALHOST
+  roles.admin.0: user@LOCALHOST
 
 de.codecentric.realm.cc-kerberos.krb5.file_path: /usr/share/elasticsearch/config/kerberos/krb5.conf
 de.codecentric.realm.cc-kerberos.krb_debug: true
