@@ -269,7 +269,7 @@
                         <id>start</id>
                         <phase>pre-integration-test</phase>
                         <goals>
-                            <goal>build</goal>
+                            <!--<goal>build</goal>-->
                             <goal>start</goal>
                         </goals>
                     </execution>
@@ -294,6 +294,7 @@
                         <elasticsearch.transport.port>${elasticsearch.transport-port}</elasticsearch.transport.port>
                         <java.security.krb5.realm>LOCALHOST</java.security.krb5.realm>
                         <java.security.krb5.kdc>${kdc.host}:88</java.security.krb5.kdc>
+                        <java.security.auth.login.config>${project.basedir}/src/test/resources/login.conf</java.security.auth.login.config>
                     </systemPropertyVariables>
                     <failIfNoTests>true</failIfNoTests>
                 </configuration>

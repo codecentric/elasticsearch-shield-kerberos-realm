@@ -1,6 +1,8 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import net.sourceforge.spnego.SpnegoHttpURLConnection;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -10,6 +12,9 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.shield.ShieldPlugin;
 import org.junit.Assert;
@@ -18,9 +23,10 @@ import org.junit.Test;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URL;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class KerberosRealmIT {
 
@@ -71,5 +77,36 @@ public class KerberosRealmIT {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(System.getProperty("elasticsearch.host")), transportPort));
             new KerberizedClient(client, "user@LOCALHOST", "wrong_password", "HTTP/localhost@LOCALHOST");
         }
+    }
+
+    @Test
+    public void should_filter_settings() throws Exception {
+        String url = System.getProperty("elasticsearch.rest.url");
+
+        net.sourceforge.spnego.SpnegoHttpURLConnection hcon = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
+
+        hcon.requestCredDeleg(true);
+        hcon.connect(new URL(url + "/_cluster/health"));
+        Assert.assertEquals(200, hcon.getResponseCode());
+
+        hcon = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
+        hcon.requestCredDeleg(true);
+        hcon.connect(new URL(url + "/_nodes/settings"));
+        Assert.assertEquals(200, hcon.getResponseCode());
+
+        final XContentParser parser = JsonXContent.jsonXContent.createParser(hcon.getInputStream());
+        XContentParser.Token token;
+        Settings settings = null;
+        while ((token = parser.nextToken()) != null) {
+            if (token == XContentParser.Token.FIELD_NAME && parser.currentName().equals("settings")) {
+                parser.nextToken();
+                final XContentBuilder builder = XContentBuilder.builder(parser.contentType().xContent());
+                settings = Settings.builder().loadFromSource(builder.copyCurrentStructure(parser).bytes().toUtf8()).build();
+                break;
+            }
+        }
+        assertTrue(settings != null);
+        assertFalse(settings.getAsMap().isEmpty());
+        assertTrue(settings.getGroups("shield.authc.realms." + KerberosRealm.TYPE).isEmpty());
     }
 }
