@@ -2,11 +2,11 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import net.sourceforge.spnego.SpnegoHttpURLConnection;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
+import org.codelibs.spnego.SpnegoHttpURLConnection;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
@@ -83,18 +83,18 @@ public class KerberosRealmIT {
     public void should_filter_settings() throws Exception {
         String url = System.getProperty("elasticsearch.rest.url");
 
-        net.sourceforge.spnego.SpnegoHttpURLConnection hcon = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
+        SpnegoHttpURLConnection connection = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
 
-        hcon.requestCredDeleg(true);
-        hcon.connect(new URL(url + "/_cluster/health"));
-        Assert.assertEquals(200, hcon.getResponseCode());
+        connection.requestCredDeleg(true);
+        connection.connect(new URL(url + "/_cluster/health"));
+        Assert.assertEquals(200, connection.getResponseCode());
 
-        hcon = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
-        hcon.requestCredDeleg(true);
-        hcon.connect(new URL(url + "/_nodes/settings"));
-        Assert.assertEquals(200, hcon.getResponseCode());
+        connection = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
+        connection.requestCredDeleg(true);
+        connection.connect(new URL(url + "/_nodes/settings"));
+        Assert.assertEquals(200, connection.getResponseCode());
 
-        final XContentParser parser = JsonXContent.jsonXContent.createParser(hcon.getInputStream());
+        final XContentParser parser = JsonXContent.jsonXContent.createParser(connection.getInputStream());
         XContentParser.Token token;
         Settings settings = null;
         while ((token = parser.nextToken()) != null) {

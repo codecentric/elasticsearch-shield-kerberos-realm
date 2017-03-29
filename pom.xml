@@ -109,9 +109,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.spnego</groupId>
+            <groupId>org.codelibs</groupId>
             <artifactId>spnego</artifactId>
-            <version>7.0</version>
+            <version>1.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
