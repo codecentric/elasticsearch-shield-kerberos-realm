@@ -43,7 +43,6 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 import javax.xml.bind.DatatypeConverter;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
@@ -63,9 +62,8 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     private final String acceptorPrincipal;
     private final Path acceptorKeyTabPath;
     private final ListMultimap<String, String> rolesMap = ArrayListMultimap.create();
-    private final boolean mockMode;
 
-    KerberosRealm(final RealmConfig config) {
+    public KerberosRealm(final RealmConfig config) {
         super(TYPE, config);
         stripRealmFromPrincipalName = config.settings().getAsBoolean(SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true);
         acceptorPrincipal = config.settings().get(SettingConstants.ACCEPTOR_PRINCIPAL, null);
@@ -82,7 +80,6 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
         logger.debug("Parsed roles: {}", rolesMap);
 
         Environment env = new Environment(config.globalSettings());
-        mockMode = config.settings().getAsBoolean("mock_mode", false);
 
         if (acceptorPrincipal == null) {
             throw new ElasticsearchException("Unconfigured (but required) property: {}", SettingConstants.ACCEPTOR_PRINCIPAL);
@@ -94,7 +91,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
         acceptorKeyTabPath = env.configFile().resolve(acceptorKeyTab);
 
-        if (!mockMode && (!Files.isReadable(acceptorKeyTabPath) && !Files.isDirectory(acceptorKeyTabPath))) {
+        if (!Files.isReadable(acceptorKeyTabPath) || Files.isDirectory(acceptorKeyTabPath)) {
             throw new ElasticsearchException("File not found or not readable: {}", acceptorKeyTabPath.toAbsolutePath());
         }
     }
@@ -151,39 +148,6 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     }
 
     private KerberosAuthenticationToken token(final String authorizationHeader) {
-        if (mockMode) {
-            return tokenMock(authorizationHeader);
-        } else {
-            return tokenKerb(authorizationHeader);
-        }
-    }
-
-    private KerberosAuthenticationToken tokenMock(final String authorizationHeader) {
-        //Negotiate YYYYVVV....
-        //Negotiate_c YYYYVVV....
-
-        if (authorizationHeader != null && acceptorPrincipal != null) {
-
-            if (!authorizationHeader.trim().toLowerCase(Locale.ENGLISH).startsWith("negotiate")) {
-                throw new ElasticsearchException("Bad 'Authorization' header");
-            } else {
-                if (authorizationHeader.trim().toLowerCase(Locale.ENGLISH).startsWith("negotiate_c")) {
-                    //client indicates that this is the last round of security context establishment
-                    return new KerberosAuthenticationToken("finaly negotiate token".getBytes(StandardCharsets.UTF_8), "mock_principal");
-                } else {
-                    //client want another ound of security context establishment
-                    final ElasticsearchException ee = new ElasticsearchException("MOCK TEST EXCEPTION");
-                    ee.addHeader("kerberos_out_token", "mocked non _c negotiate");
-                    throw ee;
-                }
-            }
-
-        }
-
-        return null;
-    }
-
-    private KerberosAuthenticationToken tokenKerb(final String authorizationHeader) {
         Principal principal;
 
         if (authorizationHeader != null && acceptorKeyTabPath != null && acceptorPrincipal != null) {

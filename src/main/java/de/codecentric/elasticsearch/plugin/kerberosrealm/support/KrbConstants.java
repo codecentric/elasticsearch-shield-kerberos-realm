@@ -23,7 +23,6 @@ import org.ietf.jgss.Oid;
 public class KrbConstants {
 
     public static final Oid SPNEGO;
-    public static final String JAAS_LOGIN_CONF_PROP = "java.security.auth.login.config";
     public static final String NEGOTIATE = "Negotiate";
     public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     static final String KRB5_CONF_PROP = "java.security.krb5.conf";
@@ -41,5 +40,4 @@ public class KrbConstants {
 
     private KrbConstants() {
     }
-
 }

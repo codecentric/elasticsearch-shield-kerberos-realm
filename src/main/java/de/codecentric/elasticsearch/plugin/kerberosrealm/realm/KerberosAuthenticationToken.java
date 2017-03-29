@@ -30,7 +30,7 @@ public class KerberosAuthenticationToken implements AuthenticationToken {
     private final String principal;
     private byte[] outToken;
 
-    KerberosAuthenticationToken(final byte[] outToken, final String principal) {
+    public KerberosAuthenticationToken(final byte[] outToken, final String principal) {
         super();
         this.outToken = Objects.requireNonNull(outToken);
         this.principal = Objects.requireNonNull(principal);
