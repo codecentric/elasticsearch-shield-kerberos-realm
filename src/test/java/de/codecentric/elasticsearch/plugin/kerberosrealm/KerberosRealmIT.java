@@ -45,8 +45,11 @@ public class KerberosRealmIT {
     public void should_authenticate_a_transport_client() throws IOException, LoginException {
         int transportPort = Integer.valueOf(System.getProperty("elasticsearch.transport.port"));
 
-        final Settings settings = Settings.builder().put("cluster.name", "elasticsearch")
-                .putArray("plugin.types", ShieldPlugin.class.getName()).build();
+        final Settings settings = Settings.builder()
+                .put("cluster.name", "elasticsearch")
+                .putArray("plugin.types", ShieldPlugin.class.getName())
+                .put("de.codecentric.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
+                .build();
 
         try (TransportClient client = TransportClient.builder().settings(settings).build()) {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(System.getProperty("elasticsearch.host")), transportPort));
@@ -70,8 +73,11 @@ public class KerberosRealmIT {
     public void should_not_authenticate_a_transport_client_with_the_wrong_password() throws Exception {
         int transportPort = Integer.valueOf(System.getProperty("elasticsearch.transport.port"));
 
-        final Settings settings = Settings.builder().put("cluster.name", "elasticsearch")
-                .putArray("plugin.types", ShieldPlugin.class.getName()).build();
+        final Settings settings = Settings.builder()
+                .put("cluster.name", "elasticsearch")
+                .putArray("plugin.types", ShieldPlugin.class.getName())
+                .put("de.codecentric.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
+                .build();
 
         try (TransportClient client = TransportClient.builder().settings(settings).build()) {
             client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(System.getProperty("elasticsearch.host")), transportPort));
