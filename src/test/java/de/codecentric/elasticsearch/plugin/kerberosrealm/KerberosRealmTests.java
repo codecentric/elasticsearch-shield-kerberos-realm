@@ -1,6 +1,7 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.RolesProvider;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;
@@ -35,7 +36,8 @@ public class KerberosRealmTests extends ESTestCase {
                 .put("type", KerberosRealm.TYPE)
                 .put("acceptor_keytab_path", "")
                 .build();
-        new KerberosRealm(new RealmConfig("test", realmSettings, globalSettings));
+        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
+        new KerberosRealm(config, new RolesProvider(config));
     }
 
     @Test
@@ -47,7 +49,8 @@ public class KerberosRealmTests extends ESTestCase {
                 .put("type", KerberosRealm.TYPE)
                 .put("acceptor_principal", "")
                 .build();
-        new KerberosRealm(new RealmConfig("test", realmSettings, globalSettings));
+        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
+        new KerberosRealm(config, new RolesProvider(config));
     }
 
     @Test
@@ -60,7 +63,8 @@ public class KerberosRealmTests extends ESTestCase {
                 .put("acceptor_keytab_path", "")
                 .put("acceptor_principal", "")
                 .build();
-        new KerberosRealm(new RealmConfig("test", realmSettings, globalSettings));
+        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
+        new KerberosRealm(config, new RolesProvider(config));
     }
 
     @Test
@@ -73,6 +77,7 @@ public class KerberosRealmTests extends ESTestCase {
                 .put("acceptor_keytab_path", tempDirPath.toAbsolutePath())
                 .put("acceptor_principal", "")
                 .build();
-        new KerberosRealm(new RealmConfig("test", realmSettings, globalSettings));
+        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
+        new KerberosRealm(config, new RolesProvider(config));
     }
 }

@@ -35,7 +35,7 @@ public class KerberosRealmFactory extends Realm.Factory<KerberosRealm> {
     @Override
     public KerberosRealm create(final RealmConfig config) {
         settingsFilter.filterOut("shield.authc.realms." + config.name() + ".*");
-        return new KerberosRealm(config);
+        return new KerberosRealm(config, new RolesProvider(config));
     }
 
     @Override

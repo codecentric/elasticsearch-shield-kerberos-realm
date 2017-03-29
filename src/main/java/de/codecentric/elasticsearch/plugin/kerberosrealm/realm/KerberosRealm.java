@@ -18,15 +18,12 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.ListMultimap;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.node.liveness.LivenessRequest;
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.shield.InternalSystemUser;
 import org.elasticsearch.shield.User;
@@ -47,40 +44,25 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
 
 public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
-    private static final String STRIP_REALM_FROM_PRINCIPAL = "strip_realm_from_principal";
     private static final String ACCEPTOR_KEYTAB_PATH = "acceptor_keytab_path";
     private static final String ACCEPTOR_PRINCIPAL = "acceptor_principal";
-    private static final String ROLES = "roles";
     public static final String TYPE = "cc-kerberos";
 
-    private final boolean stripRealmFromPrincipalName;
     private final String acceptorPrincipal;
     private final Path acceptorKeyTabPath;
-    private final ListMultimap<String, String> rolesMap = ArrayListMultimap.create();
+    private final RolesProvider rolesProvider;
 
-    public KerberosRealm(final RealmConfig config) {
+    public KerberosRealm(final RealmConfig config, RolesProvider rolesProvider) {
         super(TYPE, config);
-        stripRealmFromPrincipalName = config.settings().getAsBoolean(STRIP_REALM_FROM_PRINCIPAL, true);
         acceptorPrincipal = config.settings().get(ACCEPTOR_PRINCIPAL, null);
+        this.rolesProvider = rolesProvider;
         final String acceptorKeyTab = config.settings().get(ACCEPTOR_KEYTAB_PATH, null);
-
-        Map<String, Settings> roleGroups = config.settings().getGroups(ROLES + ".");
-
-        for (String roleGroup : roleGroups.keySet()) {
-            for (String principal : config.settings().getAsArray(ROLES + "." + roleGroup)) {
-                rolesMap.put(stripRealmName(principal, stripRealmFromPrincipalName), roleGroup);
-            }
-        }
-
-        logger.debug("Parsed roles: {}", rolesMap);
 
         if (acceptorPrincipal == null) {
             throw new ElasticsearchException("Unconfigured (but required) property: {}", ACCEPTOR_PRINCIPAL);
@@ -98,7 +80,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     }
 
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
-    private static String getUsernameFromGSSContext(final GSSContext gssContext, final boolean strip, final ESLogger logger) {
+    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
         if (gssContext.isEstablished()) {
             GSSName gssName = null;
             try {
@@ -108,26 +90,11 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
             }
 
             if (gssName != null) {
-                String name = gssName.toString();
-
-                return stripRealmName(name, strip);
-
+                return gssName.toString();
             }
         }
 
         return null;
-    }
-
-    private static String stripRealmName(String name, boolean strip) {
-        if (strip && name != null) {
-            final int i = name.indexOf('@');
-            if (i > 0) {
-                // Zero so we don;t leave a zero length name
-                name = name.substring(0, i);
-            }
-        }
-
-        return name;
     }
 
     @Override
@@ -183,7 +150,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
                         return null;
                     }
 
-                    principal = Subject.doAs(subject, new AuthenticateAction(logger, gssContext, stripRealmFromPrincipalName));
+                    principal = Subject.doAs(subject, new AuthenticateAction(logger, gssContext));
 
                 } catch (final LoginException e) {
                     logger.error("Login exception due to {}", e, e.toString());
@@ -258,12 +225,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
             return null;
         }
 
-        String[] userRoles = new String[0];
-        List<String> userRolesList = rolesMap.get(actualUser);
-
-        if (userRolesList != null && !userRolesList.isEmpty()) {
-            userRoles = userRolesList.toArray(new String[0]);
-        }
+        String[] userRoles = rolesProvider.getRoles(actualUser);
 
         logger.debug("User '{}' with roles {} successully authenticated", actualUser, Arrays.toString(userRoles));
         return new User(actualUser, userRoles);
@@ -305,18 +267,16 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
         private final ESLogger logger;
         private final GSSContext gssContext;
-        private final boolean strip;
 
-        private AuthenticateAction(final ESLogger logger, final GSSContext gssContext, final boolean strip) {
+        private AuthenticateAction(final ESLogger logger, final GSSContext gssContext) {
             super();
             this.logger = logger;
             this.gssContext = gssContext;
-            this.strip = strip;
         }
 
         @Override
         public Principal run() {
-            return new SimpleUserPrincipal(getUsernameFromGSSContext(gssContext, strip, logger));
+            return new SimpleUserPrincipal(getUsernameFromGSSContext(gssContext, logger));
         }
     }
 
