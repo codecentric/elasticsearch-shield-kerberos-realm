@@ -17,7 +17,6 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchSecurityException;
 import org.elasticsearch.common.logging.ESLogger;
@@ -29,12 +28,14 @@ import org.elasticsearch.transport.TransportMessage;
 
 public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationFailureHandler {
 
+    private static final String NEGOTIATE = "Negotiate";
+    private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private final ESLogger logger = Loggers.getLogger(this.getClass());
 
     @Override
     public ElasticsearchSecurityException unsuccessfulAuthentication(final RestRequest request, final AuthenticationToken token) {
         final ElasticsearchSecurityException e = super.unsuccessfulAuthentication(request, token);
-        e.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE);
+        e.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
         if (logger.isDebugEnabled()) {
             logger.debug("unsuccessfulAuthentication for rest request and token {}", token);
         }
@@ -44,7 +45,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
     @Override
     public ElasticsearchSecurityException missingToken(final RestRequest request) {
         final ElasticsearchSecurityException e = super.missingToken(request);
-        e.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE);
+        e.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
         if (logger.isDebugEnabled()) {
             logger.debug("missing token for rest request");
         }
@@ -62,7 +63,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
             }
         }
 
-        se.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE + outToken);
+        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE + outToken);
 
         if (logger.isDebugEnabled()) {
             logger.debug("exception for rest request: {}", e.toString());
@@ -74,7 +75,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
     @Override
     public ElasticsearchSecurityException authenticationRequired(final String action) {
         final ElasticsearchSecurityException se = super.authenticationRequired(action);
-        se.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE);
+        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 
         if (logger.isDebugEnabled()) {
             logger.debug("authentication required for action {}", action);
@@ -93,7 +94,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
                 outToken = " " + kae.getHeader("kerberos_out_token").get(0);
             }
         }
-        se.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE + outToken);
+        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE + outToken);
 
         if (logger.isDebugEnabled()) {
             logger.debug("exception for transport message: {}", e.toString());
@@ -105,7 +106,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
     @Override
     public ElasticsearchSecurityException missingToken(final TransportMessage message, final String action) {
         final ElasticsearchSecurityException se = super.missingToken(message, action);
-        se.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE);
+        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 
         if (logger.isDebugEnabled()) {
             logger.debug("missing token for {} transport message", action);
@@ -118,7 +119,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
     public ElasticsearchSecurityException unsuccessfulAuthentication(final TransportMessage message, final AuthenticationToken token,
             final String action) {
         final ElasticsearchSecurityException se = super.unsuccessfulAuthentication(message, token, action);
-        se.addHeader(KrbConstants.WWW_AUTHENTICATE, KrbConstants.NEGOTIATE);
+        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 
         if (logger.isDebugEnabled()) {
             logger.debug("unsuccessfulAuthentication for {} transport message and token {}", action, token);

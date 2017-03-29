@@ -22,14 +22,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.SettingConstants;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.node.liveness.LivenessRequest;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.shield.InternalSystemUser;
 import org.elasticsearch.shield.User;
@@ -54,8 +51,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
+
 public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
+    private static final String STRIP_REALM_FROM_PRINCIPAL = "strip_realm_from_principal";
+    private static final String ACCEPTOR_KEYTAB_PATH = "acceptor_keytab_path";
+    private static final String ACCEPTOR_PRINCIPAL = "acceptor_principal";
+    private static final String ROLES = "roles";
     public static final String TYPE = "cc-kerberos";
 
     private final boolean stripRealmFromPrincipalName;
@@ -65,31 +68,29 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
     public KerberosRealm(final RealmConfig config) {
         super(TYPE, config);
-        stripRealmFromPrincipalName = config.settings().getAsBoolean(SettingConstants.STRIP_REALM_FROM_PRINCIPAL, true);
-        acceptorPrincipal = config.settings().get(SettingConstants.ACCEPTOR_PRINCIPAL, null);
-        final String acceptorKeyTab = config.settings().get(SettingConstants.ACCEPTOR_KEYTAB_PATH, null);
+        stripRealmFromPrincipalName = config.settings().getAsBoolean(STRIP_REALM_FROM_PRINCIPAL, true);
+        acceptorPrincipal = config.settings().get(ACCEPTOR_PRINCIPAL, null);
+        final String acceptorKeyTab = config.settings().get(ACCEPTOR_KEYTAB_PATH, null);
 
-        Map<String, Settings> roleGroups = config.settings().getGroups(SettingConstants.ROLES + ".");
+        Map<String, Settings> roleGroups = config.settings().getGroups(ROLES + ".");
 
         for (String roleGroup : roleGroups.keySet()) {
-            for (String principal : config.settings().getAsArray(SettingConstants.ROLES + "." + roleGroup)) {
+            for (String principal : config.settings().getAsArray(ROLES + "." + roleGroup)) {
                 rolesMap.put(stripRealmName(principal, stripRealmFromPrincipalName), roleGroup);
             }
         }
 
         logger.debug("Parsed roles: {}", rolesMap);
 
-        Environment env = new Environment(config.globalSettings());
-
         if (acceptorPrincipal == null) {
-            throw new ElasticsearchException("Unconfigured (but required) property: {}", SettingConstants.ACCEPTOR_PRINCIPAL);
+            throw new ElasticsearchException("Unconfigured (but required) property: {}", ACCEPTOR_PRINCIPAL);
         }
 
         if (acceptorKeyTab == null) {
-            throw new ElasticsearchException("Unconfigured (but required) property: {}", SettingConstants.ACCEPTOR_KEYTAB_PATH);
+            throw new ElasticsearchException("Unconfigured (but required) property: {}", ACCEPTOR_KEYTAB_PATH);
         }
 
-        acceptorKeyTabPath = env.configFile().resolve(acceptorKeyTab);
+        acceptorKeyTabPath = config.env().configFile().resolve(acceptorKeyTab);
 
         if (!Files.isReadable(acceptorKeyTabPath) || Files.isDirectory(acceptorKeyTabPath)) {
             throw new ElasticsearchException("File not found or not readable: {}", acceptorKeyTabPath.toAbsolutePath());
@@ -170,7 +171,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
                     final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
                         @Override
                         public GSSCredential run() throws GSSException {
-                            return manager.createCredential(null, credentialLifetime, KrbConstants.SPNEGO, GSSCredential.ACCEPT_ONLY);
+                            return manager.createCredential(null, credentialLifetime, GSS_SPNEGO_MECH_OID, GSSCredential.ACCEPT_ONLY);
                         }
                     };
                     gssContext = manager.createContext(Subject.doAs(subject, action));

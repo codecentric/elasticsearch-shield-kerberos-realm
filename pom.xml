@@ -78,46 +78,15 @@
         <!-- Test deps only -->
 
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>fluent-hc</artifactId>
-            <version>4.5.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.kerby</groupId>
-            <artifactId>kerb-simplekdc</artifactId>
-            <version>1.0.0-RC1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kerby</groupId>
-            <artifactId>kerby-kdc</artifactId>
-            <version>1.0.0-RC1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.codelibs</groupId>
             <artifactId>spnego</artifactId>
             <version>1.0.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.12</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

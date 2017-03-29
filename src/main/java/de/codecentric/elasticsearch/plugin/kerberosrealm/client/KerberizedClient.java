@@ -18,7 +18,6 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.client;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.KrbConstants;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchSecurityException;
@@ -41,6 +40,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
+
 /**
  * 
  * @author salyh
@@ -48,6 +49,8 @@ import java.util.Objects;
  */
 public class KerberizedClient extends FilterClient {
 
+    private static final String NEGOTIATE = "Negotiate";
+    private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private final ESLogger logger = Loggers.getLogger(this.getClass());
     private final Subject initiatorSubject;
     private final String acceptorPrincipal;
@@ -154,14 +157,14 @@ public class KerberizedClient extends FilterClient {
         final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
             @Override
             public GSSCredential run() throws GSSException {
-                return MANAGER.createCredential(null, GSSCredential.DEFAULT_LIFETIME, KrbConstants.SPNEGO, GSSCredential.INITIATE_ONLY);
+                return MANAGER.createCredential(null, GSSCredential.DEFAULT_LIFETIME, GSS_SPNEGO_MECH_OID, GSSCredential.INITIATE_ONLY);
             }
         };
 
         final GSSCredential clientcreds = Subject.doAs(initiatorSubject, action);
 
-        final GSSContext context = MANAGER.createContext(MANAGER.createName(acceptorPrincipal, GSSName.NT_USER_NAME, KrbConstants.SPNEGO),
-                KrbConstants.SPNEGO, clientcreds, GSSContext.DEFAULT_LIFETIME);
+        final GSSContext context = MANAGER.createContext(MANAGER.createName(acceptorPrincipal, GSSName.NT_USER_NAME, GSS_SPNEGO_MECH_OID),
+                GSS_SPNEGO_MECH_OID, clientcreds, GSSContext.DEFAULT_LIFETIME);
 
         //TODO make configurable
         context.requestMutualAuth(true);
@@ -208,7 +211,7 @@ public class KerberizedClient extends FilterClient {
                     return;
                 } else {
                     String negotiateHeaderValue = null;
-                    final List<String> headers = securityException.getHeader(KrbConstants.WWW_AUTHENTICATE);
+                    final List<String> headers = securityException.getHeader(WWW_AUTHENTICATE);
                     if (headers == null || headers.isEmpty()) {
                         inner.onFailure(new ElasticsearchException("no auth header", cause));
                         return;
@@ -216,7 +219,7 @@ public class KerberizedClient extends FilterClient {
                         negotiateHeaderValue = headers.get(0).trim();
                     } else {
                         for (final String header : headers) {
-                            if (header != null && header.toLowerCase(Locale.ENGLISH).startsWith(KrbConstants.NEGOTIATE)) {
+                            if (header != null && header.toLowerCase(Locale.ENGLISH).startsWith(NEGOTIATE)) {
                                 negotiateHeaderValue = header.trim();
                                 break;
                             }
@@ -231,9 +234,9 @@ public class KerberizedClient extends FilterClient {
                     byte[] challenge = null;
 
                     try {
-                        if (negotiateHeaderValue.length() > (KrbConstants.NEGOTIATE.length() + 1)) {
+                        if (negotiateHeaderValue.length() > (NEGOTIATE.length() + 1)) {
                             challenge = DatatypeConverter
-                                    .parseBase64Binary(negotiateHeaderValue.substring(KrbConstants.NEGOTIATE.length() + 2));
+                                    .parseBase64Binary(negotiateHeaderValue.substring(NEGOTIATE.length() + 2));
                         }
 
                         byte[] data = null;

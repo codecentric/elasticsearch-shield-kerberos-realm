@@ -17,6 +17,7 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
 
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
@@ -30,6 +31,11 @@ import java.nio.file.Path;
 
 public class PropertyUtil {
 
+    private static final String PREFIX = "de.codecentric.realm." + KerberosRealm.TYPE + ".";
+    private static final String KRB_DEBUG = PREFIX + "krb_debug";
+    private static final String KRB5_CONF_PROP = "java.security.krb5.conf";
+    private static final String KRB5_FILE_PATH = PREFIX + "krb5.file_path";
+    private static final String USE_SUBJECT_CREDS_ONLY_PROP = "javax.security.auth.useSubjectCredsOnly";
     private static final ESLogger log = Loggers.getLogger(PropertyUtil.class);
 
     private PropertyUtil() {
@@ -41,16 +47,16 @@ public class PropertyUtil {
             final Environment env = new Environment(settings);
             conf = env.configFile();
         }
-        PropertyUtil.setSystemProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false", false);
-        //PropertyUtil.setSystemProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "true", false); //TODO make strict
+        PropertyUtil.setSystemProperty(USE_SUBJECT_CREDS_ONLY_PROP, "false");
+        //PropertyUtil.setSystemProperty(GSSUtil.USE_SUBJECT_CREDS_ONLY_PROP, "true", false); //TODO make strict
         try {
-            PropertyUtil.setSystemPropertyToRelativeFile(KrbConstants.KRB5_CONF_PROP, conf,
-                    settings.get(SettingConstants.KRB5_FILE_PATH, "/etc/krb5.conf"));
+            PropertyUtil.setSystemPropertyToRelativeFile(KRB5_CONF_PROP, conf,
+                    settings.get(KRB5_FILE_PATH, "/etc/krb5.conf"));
         } catch (final FileNotFoundException e) {
-            ExceptionsHelper.convertToElastic(e); // TODO add throw
+            throw ExceptionsHelper.convertToElastic(e);
         }
 
-        final boolean krbDebug = settings.getAsBoolean(SettingConstants.KRB_DEBUG, false);
+        final boolean krbDebug = settings.getAsBoolean(KRB_DEBUG, false);
 
         if (krbDebug) {
             System.out.println("Kerberos Realm debug is enabled");
@@ -64,8 +70,7 @@ public class PropertyUtil {
             log.info("Kerberos Realm debug is disabled");
         }
 
-        log.info(KrbConstants.KRB5_CONF_PROP + ": {}", System.getProperty(KrbConstants.KRB5_CONF_PROP));
-
+        log.info(KRB5_CONF_PROP + ": {}", System.getProperty(KRB5_CONF_PROP));
     }
 
     private static boolean setSystemPropertyToRelativeFile(final String property, final Path parentDir, final String relativeFileName) throws FileNotFoundException {
@@ -76,13 +81,13 @@ public class PropertyUtil {
         final Path path = parentDir.resolve(relativeFileName).toAbsolutePath();
 
         if (Files.isReadable(path) && !Files.isDirectory(path)) {
-            return setSystemProperty(property, path.toString(), false);
+            return setSystemProperty(property, path.toString());
         } else {
             throw new FileNotFoundException(path.toString());
         }
     }
 
-    public static boolean setSystemProperty(final String property, final String value, final boolean overwrite) {
+    private static boolean setSystemProperty(final String property, final String value) {
         if (System.getProperty(property) == null) {
             if (value == null) {
                 log.error("Cannot set property " + property + " because value is null");
@@ -93,11 +98,6 @@ public class PropertyUtil {
             return true;
         } else {
             log.warn("Property " + property + " already set to " + System.getProperty(property));
-            if (overwrite) {
-                log.info("Overwrite system property {} with {} (old value was {})", property, value, System.getProperty(property));
-                System.setProperty(property, value);
-                return true;
-            }
         }
         return false;
     }
