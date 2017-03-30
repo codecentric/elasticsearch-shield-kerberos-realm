@@ -39,7 +39,6 @@ public class KerberosToken implements AuthenticationToken {
     @Override
     public void clearCredentials() {
         this.outToken = null;
-        logger.debug("credentials cleared for {}", toString());
     }
 
     @Override
@@ -52,8 +51,7 @@ public class KerberosToken implements AuthenticationToken {
         return principal;
     }
 
-    @Override
-    public String toString() {
-        return "KerberosToken [principal=" + principal + ", credentials null?: " + (outToken == null) + "]";
+    public boolean isValid() {
+        return !this.principal.isEmpty() && outToken != null;
     }
 }

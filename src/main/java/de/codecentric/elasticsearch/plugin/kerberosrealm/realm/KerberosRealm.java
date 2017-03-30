@@ -62,9 +62,9 @@ public class KerberosRealm extends Realm<KerberosToken> {
             return InternalSystemUser.INSTANCE;
         }
 
-        final String actualUser = token.principal();
+        String actualUser = token.principal();
 
-        if (actualUser.isEmpty() || token.credentials() == null) {
+        if (!token.isValid()) {
             logger.warn("User '{}' cannot be authenticated", actualUser);
             return null;
         }

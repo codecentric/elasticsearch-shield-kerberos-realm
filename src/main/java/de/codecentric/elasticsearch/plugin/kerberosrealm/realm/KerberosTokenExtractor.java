@@ -22,6 +22,7 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Locale;
+import java.util.Objects;
 
 import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
 
@@ -155,7 +156,6 @@ public class KerberosTokenExtractor {
                 final String username = principal.getName();
                 return new KerberosToken(outToken, username);
             }
-
         } else {
             return null;
         }
@@ -166,7 +166,6 @@ public class KerberosTokenExtractor {
      */
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
     private static class AcceptAction implements PrivilegedExceptionAction<byte[]> {
-
         GSSContext gssContext;
 
         byte[] decoded;
@@ -219,7 +218,6 @@ public class KerberosTokenExtractor {
     }
 
     private static class SimpleUserPrincipal implements Principal, Serializable {
-
         private static final long serialVersionUID = -1;
         private final String username;
 
@@ -230,32 +228,19 @@ public class KerberosTokenExtractor {
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((username == null) ? 0 : username.hashCode());
-            return result;
+            return Objects.hashCode(this.username);
         }
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
             if (obj == null) {
                 return false;
             }
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final SimpleUserPrincipal other = (SimpleUserPrincipal) obj;
-            if (username == null) {
-                if (other.username != null) {
-                    return false;
-                }
-            } else if (!username.equals(other.username)) {
-                return false;
-            }
-            return true;
+            SimpleUserPrincipal other = (SimpleUserPrincipal) obj;
+            return Objects.equals(this.username, other.username);
         }
 
         @Override

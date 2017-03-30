@@ -71,22 +71,14 @@ public class KerberosRealmTests {
     }
 
     @Test
-    public void should_not_authenticate_kerberos_tokens_with_empty_principal() {
+    public void should_not_authenticate_invalid_kerberos_tokens() {
         KerberosToken token = new KerberosToken(new byte[0], "");
 
         assertEquals(null, kerberosRealm.authenticate(token));
     }
 
     @Test
-    public void should_not_authenticate_after_clearing_credentials() {
-        KerberosToken token = new KerberosToken(new byte[0], "principal");
-        token.clearCredentials();
-
-        assertEquals(null, kerberosRealm.authenticate(token));
-    }
-
-    @Test
-    public void shoult_authenticate_valid_kerberos_tokens() {
+    public void should_authenticate_valid_kerberos_tokens() {
         String principal = "principal";
         String[] roles = new String[]{"role 1", "role 2"};
         Mockito.when(mockedRolesProvider.getRoles(principal)).thenReturn(roles);
