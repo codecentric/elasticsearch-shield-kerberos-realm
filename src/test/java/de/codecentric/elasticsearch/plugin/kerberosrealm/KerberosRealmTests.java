@@ -1,83 +1,101 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.RolesProvider;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.env.Environment;
+import org.elasticsearch.rest.RestRequest;
+import org.elasticsearch.shield.InternalSystemUser;
+import org.elasticsearch.shield.User;
 import org.elasticsearch.shield.authc.RealmConfig;
-import org.elasticsearch.test.ESTestCase;
+import org.elasticsearch.shield.authc.support.UsernamePasswordToken;
+import org.elasticsearch.transport.TransportRequest;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
-import java.nio.file.Path;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-public class KerberosRealmTests extends ESTestCase {
+public class KerberosRealmTests {
 
-    @Rule
-    public ExpectedException expectedExcpetion = ExpectedException.none();
-
-    private Path tempDirPath;
-    private Settings globalSettings;
+    private KerberosRealm kerberosRealm;
+    private RolesProvider mockedRolesProvider;
+    private KerberosTokenExtractor mockedTokenExtractor;
 
     @Before
     public void before() {
-        tempDirPath = createTempDir("tempdir-unittest");
-        globalSettings = Settings.builder().put("path.home", tempDirPath).build();
+        RealmConfig config = new RealmConfig("test", Settings.EMPTY, Settings.EMPTY, mock(Environment.class));
+        mockedRolesProvider = mock(RolesProvider.class);
+        mockedTokenExtractor = mock(KerberosTokenExtractor.class);
+
+        kerberosRealm = new KerberosRealm(config, mockedTokenExtractor, mockedRolesProvider);
     }
 
     @Test
-    public void should_throw_elasticsearch_exception_when_acceptor_principal_is_missing() {
-        expectedExcpetion.expect(ElasticsearchException.class);
-        expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_principal");
-
-        Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
-                .put("acceptor_keytab_path", "")
-                .build();
-        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
-        new KerberosRealm(config, new RolesProvider(config));
+    public void should_not_support_user_lookup() {
+        assertEquals(false, kerberosRealm.userLookupSupported());
+        assertEquals(null, kerberosRealm.lookupUser("user"));
     }
 
     @Test
-    public void should_throw_elasticsearch_exception_when_acceptor_keytab_path_is_missing() {
-        expectedExcpetion.expect(ElasticsearchException.class);
-        expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_keytab_path");
+    public void should_support_only_kerberos_tokens() {
+        KerberosToken kerberosToken = new KerberosToken(new byte[0], "");
+        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(null, null);
 
-        Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
-                .put("acceptor_principal", "")
-                .build();
-        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
-        new KerberosRealm(config, new RolesProvider(config));
+        assertEquals(true, kerberosRealm.supports(kerberosToken));
+        assertEquals(false, kerberosRealm.supports(usernamePasswordToken));
     }
 
     @Test
-    public void should_throw_elasticsearch_exception_when_acceptor_keytab_is_not_readable() {
-        expectedExcpetion.expect(ElasticsearchException.class);
-        expectedExcpetion.expectMessage("File not found or not readable");
-
-        Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
-                .put("acceptor_keytab_path", "")
-                .put("acceptor_principal", "")
-                .build();
-        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
-        new KerberosRealm(config, new RolesProvider(config));
+    public void should_redirect_the_token_extraction_for_rest_requests() {
+        RestRequest mockedRequest = mock(RestRequest.class);
+        kerberosRealm.token(mockedRequest);
+        verify(mockedTokenExtractor).extractToken(mockedRequest);
     }
 
     @Test
-    public void should_throw_elasticsearch_exception_when_acceptor_keytab_is_a_directory() {
-        expectedExcpetion.expect(ElasticsearchException.class);
-        expectedExcpetion.expectMessage("File not found or not readable");
+    public void should_redirect_the_token_extraction_for_transport_requests() {
+        TransportRequest mockedRequest = mock(TransportRequest.class);
+        kerberosRealm.token(mockedRequest);
 
-        Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
-                .put("acceptor_keytab_path", tempDirPath.toAbsolutePath())
-                .put("acceptor_principal", "")
-                .build();
-        RealmConfig config = new RealmConfig("test", realmSettings, globalSettings);
-        new KerberosRealm(config, new RolesProvider(config));
+        verify(mockedTokenExtractor).extractToken(mockedRequest);
+    }
+
+    @Test
+    public void should_authenticate_liveness_token_as_interal_system_user() {
+        assertEquals(InternalSystemUser.INSTANCE, kerberosRealm.authenticate(KerberosToken.LIVENESS_TOKEN));
+    }
+
+    @Test
+    public void should_not_authenticate_kerberos_tokens_with_empty_principal() {
+        KerberosToken token = new KerberosToken(new byte[0], "");
+
+        assertEquals(null, kerberosRealm.authenticate(token));
+    }
+
+    @Test
+    public void should_not_authenticate_after_clearing_credentials() {
+        KerberosToken token = new KerberosToken(new byte[0], "principal");
+        token.clearCredentials();
+
+        assertEquals(null, kerberosRealm.authenticate(token));
+    }
+
+    @Test
+    public void shoult_authenticate_valid_kerberos_tokens() {
+        String principal = "principal";
+        String[] roles = new String[]{"role 1", "role 2"};
+        Mockito.when(mockedRolesProvider.getRoles(principal)).thenReturn(roles);
+        KerberosToken token = new KerberosToken(new byte[0], principal);
+
+        User user = kerberosRealm.authenticate(token);
+
+        verify(mockedRolesProvider).getRoles(principal);
+        assertEquals(principal, user.principal());
+        assertEquals(roles, user.roles());
     }
 }

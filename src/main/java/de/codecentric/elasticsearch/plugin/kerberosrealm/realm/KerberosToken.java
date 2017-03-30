@@ -23,14 +23,14 @@ import org.elasticsearch.shield.authc.AuthenticationToken;
 
 import java.util.Objects;
 
-public class KerberosAuthenticationToken implements AuthenticationToken {
+public class KerberosToken implements AuthenticationToken {
 
-    static final KerberosAuthenticationToken LIVENESS_TOKEN = new KerberosAuthenticationToken(new byte[]{1,2,3}, "LIVENESS_TOKEN");
+    public static final KerberosToken LIVENESS_TOKEN = new KerberosToken(new byte[]{1,2,3}, "LIVENESS_TOKEN");
     private final ESLogger logger = Loggers.getLogger(this.getClass());
     private final String principal;
     private byte[] outToken;
 
-    public KerberosAuthenticationToken(final byte[] outToken, final String principal) {
+    public KerberosToken(final byte[] outToken, final String principal) {
         super();
         this.outToken = Objects.requireNonNull(outToken);
         this.principal = Objects.requireNonNull(principal);
@@ -54,7 +54,6 @@ public class KerberosAuthenticationToken implements AuthenticationToken {
 
     @Override
     public String toString() {
-        return "KerberosAuthenticationToken [principal=" + principal + ", credentials null?: " + (outToken == null) + "]";
+        return "KerberosToken [principal=" + principal + ", credentials null?: " + (outToken == null) + "]";
     }
-
 }
