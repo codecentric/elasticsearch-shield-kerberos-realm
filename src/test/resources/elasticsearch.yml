@@ -7,7 +7,7 @@ shield.authc.realms.kerb:
   acceptor_principal: HTTP/localhost@LOCALHOST
   roles.admin.0: user@LOCALHOST
 
-de.codecentric.realm.cc-kerberos.krb5.file_path: /usr/share/elasticsearch/config/kerberos/krb5.conf
-de.codecentric.realm.cc-kerberos.krb_debug: true
+com.tngtech.realm.cc-kerberos.krb5.file_path: /usr/share/elasticsearch/config/kerberos/krb5.conf
+com.tngtech.realm.cc-kerberos.krb_debug: true
 
 security.manager.enabled: false

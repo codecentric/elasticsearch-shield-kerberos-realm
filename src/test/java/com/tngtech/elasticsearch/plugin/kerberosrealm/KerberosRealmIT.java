@@ -1,7 +1,7 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -48,7 +48,7 @@ public class KerberosRealmIT {
         final Settings settings = Settings.builder()
                 .put("cluster.name", "elasticsearch")
                 .putArray("plugin.types", ShieldPlugin.class.getName())
-                .put("de.codecentric.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
+                .put("com.tngtech.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
                 .build();
 
         try (TransportClient client = TransportClient.builder().settings(settings).build()) {
@@ -76,7 +76,7 @@ public class KerberosRealmIT {
         final Settings settings = Settings.builder()
                 .put("cluster.name", "elasticsearch")
                 .putArray("plugin.types", ShieldPlugin.class.getName())
-                .put("de.codecentric.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
+                .put("com.tngtech.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
                 .build();
 
         try (TransportClient client = TransportClient.builder().settings(settings).build()) {

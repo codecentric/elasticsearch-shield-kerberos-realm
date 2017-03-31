@@ -1,4 +1,4 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.realm;
 
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.settings.Settings;
@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RolesProvider {
-    private final HashMap<String, List<String>> rolesMap = new HashMap<>();
     private static final String ROLES = "roles";
+    private final HashMap<String, List<String>> rolesMap = new HashMap<>();
 
     public RolesProvider(RealmConfig config) {
         ESLogger logger = config.logger(RolesProvider.class);

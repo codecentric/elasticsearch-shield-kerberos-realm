@@ -15,10 +15,10 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.client;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.client;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchSecurityException;
 import org.elasticsearch.ExceptionsHelper;
@@ -40,12 +40,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
+import static com.tngtech.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
 
 /**
- * 
  * @author salyh
- *
  */
 public class KerberizedClient extends FilterClient {
 
@@ -56,7 +54,6 @@ public class KerberizedClient extends FilterClient {
     private final String acceptorPrincipal;
 
     /**
-     * 
      * @param in
      * @param initiatorSubject
      * @param acceptorPrincipal
@@ -70,11 +67,9 @@ public class KerberizedClient extends FilterClient {
     }
 
     /**
-     * 
      * @param in
      * @param initiatorPrincipal
-     * @param tgtTicketCache
-     *            make sure youre allowed to read from here es sec man
+     * @param tgtTicketCache     make sure youre allowed to read from here es sec man
      * @param acceptorPrincipal
      * @throws LoginException
      */
@@ -84,7 +79,6 @@ public class KerberizedClient extends FilterClient {
     }
 
     /**
-     * 
      * @param in
      * @param initiatorPrincipal
      * @param initiatorPrincipalPassword
@@ -92,12 +86,11 @@ public class KerberizedClient extends FilterClient {
      * @throws LoginException
      */
     public KerberizedClient(final Client in, final String initiatorPrincipal, final String initiatorPrincipalPassword,
-            final String acceptorPrincipal) throws LoginException {
+                            final String acceptorPrincipal) throws LoginException {
         this(in, JaasKrbUtil.loginUsingPassword(initiatorPrincipal, initiatorPrincipalPassword), acceptorPrincipal);
     }
 
     /**
-     * 
      * @param in
      * @param keyTabFile
      * @param initiatorPrincipal
@@ -185,7 +178,7 @@ public class KerberizedClient extends FilterClient {
         private volatile int count;
 
         private KerberosActionListener(final ActionListener inner, final Action action, final ActionRequest<ActionRequest> request,
-                final GSSContext context) {
+                                       final GSSContext context) {
             super();
             this.inner = inner;
             this.action = action;

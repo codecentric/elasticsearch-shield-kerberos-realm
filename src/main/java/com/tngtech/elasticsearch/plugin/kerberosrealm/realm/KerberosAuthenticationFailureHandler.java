@@ -15,7 +15,7 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.realm;
 
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchSecurityException;
@@ -117,7 +117,7 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
 
     @Override
     public ElasticsearchSecurityException unsuccessfulAuthentication(final TransportMessage message, final AuthenticationToken token,
-            final String action) {
+                                                                     final String action) {
         final ElasticsearchSecurityException se = super.unsuccessfulAuthentication(message, token, action);
         se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 

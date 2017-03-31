@@ -1,9 +1,9 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.RolesProvider;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.RolesProvider;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.RestRequest;

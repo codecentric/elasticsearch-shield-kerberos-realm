@@ -1,7 +1,7 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;

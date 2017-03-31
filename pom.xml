@@ -10,11 +10,11 @@
 
     <artifactId>elasticsearch-shield-kerberos-realm</artifactId>
     <name>Shield Kerberos V5 Realm</name>
-    <description>Shield Kerberos V5 Realm by codecentric AG</description>
+    <description>Shield Kerberos V5 Realm</description>
 
     <properties>
         <!-- define the plugin classname so it can be put in the descriptor -->
-        <elasticsearch.plugin.classname>de.codecentric.elasticsearch.plugin.kerberosrealm.KerberosRealmPlugin
+        <elasticsearch.plugin.classname>com.tngtech.elasticsearch.plugin.kerberosrealm.KerberosRealmPlugin
         </elasticsearch.plugin.classname>
         <!-- this plugin cannot be isolated since it needs to directly interact
             with Shield -->

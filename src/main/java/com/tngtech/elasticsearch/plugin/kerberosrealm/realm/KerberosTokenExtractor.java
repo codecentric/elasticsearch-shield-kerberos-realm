@@ -1,7 +1,7 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.realm;
 
 import com.google.common.collect.Iterators;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.admin.cluster.node.liveness.LivenessRequest;
@@ -24,7 +24,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Locale;
 import java.util.Objects;
 
-import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
+import static com.tngtech.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
 
 public class KerberosTokenExtractor {
 
@@ -53,6 +53,24 @@ public class KerberosTokenExtractor {
         if (!Files.isReadable(acceptorKeyTabPath) || Files.isDirectory(acceptorKeyTabPath)) {
             throw new ElasticsearchException("File not found or not readable: {}", acceptorKeyTabPath.toAbsolutePath());
         }
+    }
+
+    //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
+    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
+        if (gssContext.isEstablished()) {
+            GSSName gssName = null;
+            try {
+                gssName = gssContext.getSrcName();
+            } catch (final GSSException e) {
+                logger.error("Unable to get src name from gss context", e);
+            }
+
+            if (gssName != null) {
+                return gssName.toString();
+            }
+        }
+
+        return null;
     }
 
     public KerberosToken extractToken(RestRequest request) {
@@ -179,24 +197,6 @@ public class KerberosTokenExtractor {
         public byte[] run() throws GSSException {
             return gssContext.acceptSecContext(decoded, 0, decoded.length);
         }
-    }
-
-    //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
-    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
-        if (gssContext.isEstablished()) {
-            GSSName gssName = null;
-            try {
-                gssName = gssContext.getSrcName();
-            } catch (final GSSException e) {
-                logger.error("Unable to get src name from gss context", e);
-            }
-
-            if (gssName != null) {
-                return gssName.toString();
-            }
-        }
-
-        return null;
     }
 
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/

@@ -15,7 +15,7 @@
 
    Author: Kerby Project, Apache Software Foundation, https://directory.apache.org/kerby/
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.support;
 
 //taken from the apache kerby project
 //https://directory.apache.org/kerby/

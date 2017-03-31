@@ -15,9 +15,9 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.support;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
@@ -31,7 +31,7 @@ import java.nio.file.Path;
 
 public class PropertyUtil {
 
-    private static final String PREFIX = "de.codecentric.realm." + KerberosRealm.TYPE + ".";
+    private static final String PREFIX = "com.tngtech.realm." + KerberosRealm.TYPE + ".";
     private static final String KRB_DEBUG = PREFIX + "krb_debug";
     private static final String KRB5_CONF_PROP = "java.security.krb5.conf";
     private static final String KRB5_FILE_PATH = PREFIX + "krb5.file_path";

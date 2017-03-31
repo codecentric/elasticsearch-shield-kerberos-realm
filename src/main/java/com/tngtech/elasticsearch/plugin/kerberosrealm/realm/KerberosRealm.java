@@ -16,7 +16,7 @@
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
            and Apache Tomcat project https://tomcat.apache.org/ (see comments and NOTICE)
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.realm;
 
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.shield.InternalSystemUser;

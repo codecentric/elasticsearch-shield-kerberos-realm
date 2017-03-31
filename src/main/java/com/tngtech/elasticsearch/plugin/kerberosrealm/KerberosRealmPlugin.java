@@ -15,12 +15,12 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
@@ -50,7 +50,7 @@ public class KerberosRealmPlugin extends Plugin {
 
     @Override
     public String description() {
-        return "codecentric AG Kerberos V5 Realm";
+        return "Kerberos V5 Realm";
     }
 
     @SuppressForbidden(reason = "proper use of Paths.get()")

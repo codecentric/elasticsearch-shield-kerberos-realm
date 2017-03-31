@@ -1,6 +1,6 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
+import com.tngtech.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -15,7 +15,7 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
+package com.tngtech.elasticsearch.plugin.kerberosrealm.realm;
 
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.shield.ShieldSettingsFilter;
