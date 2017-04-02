@@ -14,15 +14,12 @@ import org.ietf.jgss.*;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 import javax.xml.bind.DatatypeConverter;
-import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Locale;
-import java.util.Objects;
 
 import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
 
@@ -53,6 +50,24 @@ public class KerberosTokenExtractor {
         if (!Files.isReadable(acceptorKeyTabPath) || Files.isDirectory(acceptorKeyTabPath)) {
             throw new ElasticsearchException("File not found or not readable: {}", acceptorKeyTabPath.toAbsolutePath());
         }
+    }
+
+    //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
+    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
+        if (gssContext.isEstablished()) {
+            GSSName gssName = null;
+            try {
+                gssName = gssContext.getSrcName();
+            } catch (final GSSException e) {
+                logger.error("Unable to get src name from gss context", e);
+            }
+
+            if (gssName != null) {
+                return gssName.toString();
+            }
+        }
+
+        return null;
     }
 
     public KerberosToken extractToken(RestRequest request) {
@@ -86,7 +101,7 @@ public class KerberosTokenExtractor {
     }
 
     private KerberosToken extractToken(String authorizationHeader) {
-        Principal principal;
+        String username;
 
         if (authorizationHeader != null && acceptorKeyTabPath != null && acceptorPrincipal != null) {
 
@@ -103,12 +118,11 @@ public class KerberosTokenExtractor {
                     final Subject subject = JaasKrbUtil.loginUsingKeytab(acceptorPrincipal, acceptorKeyTabPath, false);
 
                     final GSSManager manager = GSSManager.getInstance();
-                    final int credentialLifetime = GSSCredential.INDEFINITE_LIFETIME;
 
                     final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
                         @Override
                         public GSSCredential run() throws GSSException {
-                            return manager.createCredential(null, credentialLifetime, GSS_SPNEGO_MECH_OID, GSSCredential.ACCEPT_ONLY);
+                            return manager.createCredential(null, GSSCredential.INDEFINITE_LIFETIME, GSS_SPNEGO_MECH_OID, GSSCredential.ACCEPT_ONLY);
                         }
                     };
                     gssContext = manager.createContext(Subject.doAs(subject, action));
@@ -120,7 +134,7 @@ public class KerberosTokenExtractor {
                         return null;
                     }
 
-                    principal = Subject.doAs(subject, new AuthenticateAction(logger, gssContext));
+                    username = Subject.doAs(subject, new AuthenticateAction(logger, gssContext));
 
                 } catch (final LoginException e) {
                     logger.error("Login exception due to {}", e, e.toString());
@@ -147,13 +161,12 @@ public class KerberosTokenExtractor {
                     //TODO subject logout
                 }
 
-                if (principal == null) {
-                    final ElasticsearchException ee = new ElasticsearchException("Principal null");
+                if (username == null) {
+                    final ElasticsearchException ee = new ElasticsearchException("Username null");
                     ee.addHeader("kerberos_out_token", DatatypeConverter.printBase64Binary(outToken));
                     throw ee;
                 }
 
-                final String username = principal.getName();
                 return new KerberosToken(outToken, username);
             }
         } else {
@@ -182,25 +195,7 @@ public class KerberosTokenExtractor {
     }
 
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
-    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
-        if (gssContext.isEstablished()) {
-            GSSName gssName = null;
-            try {
-                gssName = gssContext.getSrcName();
-            } catch (final GSSException e) {
-                logger.error("Unable to get src name from gss context", e);
-            }
-
-            if (gssName != null) {
-                return gssName.toString();
-            }
-        }
-
-        return null;
-    }
-
-    //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
-    private static class AuthenticateAction implements PrivilegedAction<Principal> {
+    private static class AuthenticateAction implements PrivilegedAction<String> {
 
         private final ESLogger logger;
         private final GSSContext gssContext;
@@ -212,45 +207,8 @@ public class KerberosTokenExtractor {
         }
 
         @Override
-        public Principal run() {
-            return new SimpleUserPrincipal(getUsernameFromGSSContext(gssContext, logger));
-        }
-    }
-
-    private static class SimpleUserPrincipal implements Principal, Serializable {
-        private static final long serialVersionUID = -1;
-        private final String username;
-
-        SimpleUserPrincipal(final String username) {
-            super();
-            this.username = username;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(this.username);
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            SimpleUserPrincipal other = (SimpleUserPrincipal) obj;
-            return Objects.equals(this.username, other.username);
-        }
-
-        @Override
-        public String getName() {
-            return this.username;
-        }
-
-        @Override
-        public String toString() {
-            return "[principal: " + this.username + "]";
+        public String run() {
+            return getUsernameFromGSSContext(gssContext, logger);
         }
     }
 }
