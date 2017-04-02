@@ -12,11 +12,13 @@ import org.elasticsearch.shield.User;
 import org.elasticsearch.shield.authc.RealmConfig;
 import org.elasticsearch.shield.authc.support.UsernamePasswordToken;
 import org.elasticsearch.transport.TransportRequest;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -37,8 +39,8 @@ public class KerberosRealmTests {
 
     @Test
     public void should_not_support_user_lookup() {
-        assertEquals(false, kerberosRealm.userLookupSupported());
-        assertEquals(null, kerberosRealm.lookupUser("user"));
+        assertThat(kerberosRealm.userLookupSupported(), is(false));
+        assertThat(kerberosRealm.lookupUser("user"), is(nullValue()));
     }
 
     @Test
@@ -46,8 +48,8 @@ public class KerberosRealmTests {
         KerberosToken kerberosToken = new KerberosToken(new byte[0], "");
         UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(null, null);
 
-        assertEquals(true, kerberosRealm.supports(kerberosToken));
-        assertEquals(false, kerberosRealm.supports(usernamePasswordToken));
+        assertThat(kerberosRealm.supports(kerberosToken), is(true));
+        assertThat(kerberosRealm.supports(usernamePasswordToken), is(false));
     }
 
     @Test
@@ -67,14 +69,14 @@ public class KerberosRealmTests {
 
     @Test
     public void should_authenticate_liveness_token_as_interal_system_user() {
-        assertEquals(InternalSystemUser.INSTANCE, kerberosRealm.authenticate(KerberosToken.LIVENESS_TOKEN));
+        assertThat(kerberosRealm.authenticate(KerberosToken.LIVENESS_TOKEN), Matchers.<User>is(InternalSystemUser.INSTANCE));
     }
 
     @Test
     public void should_not_authenticate_invalid_kerberos_tokens() {
         KerberosToken token = new KerberosToken(new byte[0], "");
 
-        assertEquals(null, kerberosRealm.authenticate(token));
+        assertThat(kerberosRealm.authenticate(token), is(nullValue()));
     }
 
     @Test
@@ -87,7 +89,7 @@ public class KerberosRealmTests {
         User user = kerberosRealm.authenticate(token);
 
         verify(mockedRolesProvider).getRoles(principal);
-        assertEquals(principal, user.principal());
-        assertEquals(roles, user.roles());
+        assertThat(user.principal(), is(principal));
+        assertThat(user.roles(), arrayContainingInAnyOrder(roles));
     }
 }

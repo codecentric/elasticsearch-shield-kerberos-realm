@@ -2,10 +2,6 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.client.KerberizedClient;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClients;
 import org.codelibs.spnego.SpnegoHttpURLConnection;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -17,28 +13,43 @@ import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.shield.ShieldPlugin;
-import org.junit.Assert;
+import org.ietf.jgss.GSSException;
 import org.junit.Test;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.security.PrivilegedActionException;
 
+import static java.net.HttpURLConnection.HTTP_OK;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
 public class KerberosRealmIT {
 
     @Test
-    public void should_initially_responds_with_status_code_401() throws IOException {
+    public void should_initially_responds_with_unauthorized() throws IOException {
+        URL url = new URL(System.getProperty("elasticsearch.rest.url"));
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        connection.connect();
+
+        assertThat(connection.getResponseCode(), is(HTTP_UNAUTHORIZED));
+        assertThat(connection.getHeaderField("WWW-Authenticate"), is("Negotiate"));
+    }
+
+    @Test
+    public void should_authenticate_a_rest_request() throws LoginException, IOException, PrivilegedActionException, GSSException {
         String url = System.getProperty("elasticsearch.rest.url");
+        SpnegoHttpURLConnection connection = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
 
-        HttpClient client = HttpClients.createDefault();
-        HttpGet request = new HttpGet(url);
-        HttpResponse response = client.execute(request);
+        connection.requestCredDeleg(true);
+        connection.connect(new URL(url + "/_shield/authenticate"));
 
-        Assert.assertEquals(response.getStatusLine().getStatusCode(), 401);
+        assertThat(connection.getResponseCode(), is(HTTP_OK));
     }
 
     @Test
@@ -93,12 +104,12 @@ public class KerberosRealmIT {
 
         connection.requestCredDeleg(true);
         connection.connect(new URL(url + "/_cluster/health"));
-        Assert.assertEquals(200, connection.getResponseCode());
+        assertThat(connection.getResponseCode(), is(HTTP_OK));
 
         connection = new SpnegoHttpURLConnection("restClient", "user@LOCALHOST", "password");
         connection.requestCredDeleg(true);
         connection.connect(new URL(url + "/_nodes/settings"));
-        Assert.assertEquals(200, connection.getResponseCode());
+        assertThat(connection.getResponseCode(), is(HTTP_OK));
 
         final XContentParser parser = JsonXContent.jsonXContent.createParser(connection.getInputStream());
         XContentParser.Token token;

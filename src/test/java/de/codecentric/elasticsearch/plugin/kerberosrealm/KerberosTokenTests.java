@@ -3,7 +3,9 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
 
 public class KerberosTokenTests {
 
@@ -11,14 +13,14 @@ public class KerberosTokenTests {
     public void should_be_valid_with_non_empty_principal() {
         KerberosToken token = new KerberosToken(new byte[0], "principal");
 
-        assertEquals(true, token.isValid());
+        assertThat(token.isValid(), is(true));
     }
 
     @Test
     public void should_be_invalid_with_empty_principal() {
         KerberosToken token = new KerberosToken(new byte[0], "");
 
-        assertEquals(false, token.isValid());
+        assertThat(token.isValid(), is(false));
     }
 
     @Test
@@ -26,7 +28,7 @@ public class KerberosTokenTests {
         KerberosToken token = new KerberosToken(new byte[0], "principal");
         token.clearCredentials();
 
-        assertEquals(null, token.credentials());
+        assertThat(token.credentials(), is(nullValue()));
     }
 
     @Test
@@ -34,6 +36,6 @@ public class KerberosTokenTests {
         KerberosToken token = new KerberosToken(new byte[0], "principal");
         token.clearCredentials();
 
-        assertEquals(false, token.isValid());
+        assertThat(token.isValid(), is(false));
     }
 }
