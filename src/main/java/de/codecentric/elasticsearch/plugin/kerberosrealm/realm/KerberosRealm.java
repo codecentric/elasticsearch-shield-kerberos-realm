@@ -19,7 +19,7 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
 import com.google.common.collect.Iterators;
-import org.elasticsearch.ElasticsearchException;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken.KerberosTokenFactory;
 import org.elasticsearch.action.admin.cluster.node.liveness.LivenessRequest;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.shield.InternalSystemUser;
@@ -29,12 +29,11 @@ import org.elasticsearch.shield.authc.Realm;
 import org.elasticsearch.shield.authc.RealmConfig;
 import org.elasticsearch.transport.TransportMessage;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
-import java.util.Locale;
 
 public class KerberosRealm extends Realm<KerberosToken> {
 
+    private static final String HTTP_AUTHORIZATION = "Authorization";
     public static final String TYPE = "cc-kerberos";
 
     private final RolesProvider rolesProvider;
@@ -56,8 +55,8 @@ public class KerberosRealm extends Realm<KerberosToken> {
         if (logger.isDebugEnabled()) {
             logger.debug("Rest request headers: {}", Iterators.toString(request.headers().iterator()));
         }
-        String authorizationHeader = request.header("Authorization");
-        KerberosToken token = extractToken(authorizationHeader);
+        String authorizationHeader = request.header(HTTP_AUTHORIZATION);
+        KerberosToken token = new KerberosTokenFactory().extractToken(authorizationHeader);
         if (token != null && logger.isDebugEnabled()) {
             logger.debug("Rest request token '{}' for {} successully generated", token, request.path());
         }
@@ -74,23 +73,12 @@ public class KerberosRealm extends Realm<KerberosToken> {
             return LivenessToken.INSTANCE;
         }
 
-        String authorizationHeader = message.getHeader("Authorization");
-        KerberosToken token = extractToken(authorizationHeader);
+        String authorizationHeader = message.getHeader(HTTP_AUTHORIZATION);
+        KerberosToken token = new KerberosTokenFactory().extractToken(authorizationHeader);
         if (token != null && logger.isDebugEnabled()) {
             logger.debug("Transport message token '{}' for message {} successully generated", token, message.getClass());
         }
         return token;
-    }
-
-    private KerberosToken extractToken(String authorizationHeader) {
-        if (authorizationHeader == null) {
-            return null;
-        } else if (!authorizationHeader.trim().toLowerCase(Locale.ENGLISH).startsWith("negotiate ")) {
-            throw new ElasticsearchException("Bad 'Authorization' header");
-        } else {
-            byte[] token = DatatypeConverter.parseBase64Binary(authorizationHeader.substring(10));
-            return new KerberosToken(token);
-        }
     }
 
     @Override

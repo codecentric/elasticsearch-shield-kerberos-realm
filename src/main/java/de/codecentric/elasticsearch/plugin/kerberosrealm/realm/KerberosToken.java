@@ -17,8 +17,11 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.shield.authc.AuthenticationToken;
 
+import javax.xml.bind.DatatypeConverter;
+import java.util.Locale;
 import java.util.Objects;
 
 public class KerberosToken implements AuthenticationToken {
@@ -41,5 +44,18 @@ public class KerberosToken implements AuthenticationToken {
     @Override
     public String principal() {
         return null;
+    }
+
+    public static class KerberosTokenFactory {
+        public KerberosToken extractToken(String authorizationHeader) {
+            if (authorizationHeader == null) {
+                return null;
+            } else if (!authorizationHeader.trim().toLowerCase(Locale.ENGLISH).startsWith("negotiate ")) {
+                throw new ElasticsearchException("Bad 'Authorization' header");
+            } else {
+                byte[] token = DatatypeConverter.parseBase64Binary(authorizationHeader.substring(10));
+                return new KerberosToken(token);
+            }
+        }
     }
 }

@@ -15,10 +15,12 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.util.HashMap;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -66,17 +68,28 @@ public class KerberosRealmTests {
     }
 
     @Test
-    public void should_return_null_when_rest_request_has_no_authorization_header() throws IOException {
-        RestRequest request = new FakeRestRequest(new HashMap<String, String>(), new HashMap<String, String>());
+    public void should_return_a_token_when_rest_request_has_valid_authorization_header() throws IOException {
+        byte[] expectedToken = new byte[]{1, 2, 3};
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Negotiate " + DatatypeConverter.printBase64Binary(expectedToken));
+        RestRequest request = new FakeRestRequest(headers, new HashMap<String, String>());
 
-        assertThat(kerberosRealm.token(request), is(nullValue()));
+        KerberosToken token = kerberosRealm.token(request);
+
+        assertThat(token, is(notNullValue()));
+        assertArrayEquals(token.credentials(), expectedToken);
     }
 
     @Test
-    public void should_return_null_when_transport_message_has_no_authorization_header() throws IOException {
+    public void should_return_a_token_when_transport_message_has_valid_authorization_header() throws IOException {
+        byte[] expectedToken = new byte[]{1, 2, 3};
         TransportMessage message = new ClusterHealthRequest();
+        message.putHeader("Authorization", "Negotiate " + DatatypeConverter.printBase64Binary(expectedToken));
 
-        assertThat(kerberosRealm.token(message), is(nullValue()));
+        KerberosToken token = kerberosRealm.token(message);
+
+        assertThat(token, is(notNullValue()));
+        assertArrayEquals(token.credentials(), expectedToken);
     }
 
     @Test
