@@ -53,26 +53,20 @@ public class KerberosRealmIT {
     }
 
     @Test
-    public void should_authenticate_a_transport_client() throws IOException, LoginException {
-        int transportPort = Integer.valueOf(System.getProperty("elasticsearch.transport.port"));
+    public void should_authenticate_a_transport_client() throws IOException, LoginException, GSSException {
+        InetAddress address = InetAddress.getByName(System.getProperty("elasticsearch.host"));
+        int port = Integer.valueOf(System.getProperty("elasticsearch.transport.port"));
 
-        final Settings settings = Settings.builder()
+        Settings settings = Settings.builder()
                 .put("cluster.name", "elasticsearch")
-                .putArray("plugin.types", ShieldPlugin.class.getName())
                 .put("de.codecentric.realm.cc-kerberos.krb5.file_path", System.getProperty("krb5.conf"))
                 .build();
 
         try (TransportClient client = TransportClient.builder().settings(settings).build()) {
-            client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(System.getProperty("elasticsearch.host")), transportPort));
+            client.addTransportAddress(new InetSocketTransportAddress(address, port));
             try (KerberizedClient kc = new KerberizedClient(client, "user@LOCALHOST", "password", "HTTP/localhost@LOCALHOST")) {
 
                 ClusterHealthResponse response = kc.admin().cluster().prepareHealth().execute().actionGet();
-                assertThat(response.isTimedOut(), is(false));
-
-                response = kc.admin().cluster().prepareHealth().execute().actionGet();
-                assertThat(response.isTimedOut(), is(false));
-
-                response = kc.admin().cluster().prepareHealth().execute().actionGet();
                 assertThat(response.isTimedOut(), is(false));
                 assertThat(response.status(), is(RestStatus.OK));
                 assertThat(response.getStatus(), is(ClusterHealthStatus.GREEN));

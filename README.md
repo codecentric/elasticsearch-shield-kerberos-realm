@@ -91,18 +91,6 @@ Or with a browser that supports SPNEGO like Chrome or Firefox
                                             "secret",
                                             "HTTP/localhost@REALM.COM")
 
-####Login with (client side) keytab
-    KerberizedClient kc = new KerberizedClient(client,
-                                            Paths.get("client.keytab"),
-                                            "user@REALM.COM",
-                                            "HTTP/localhost@REALM.COM")
-
-####Login with TGT (Ticket)
-    KerberizedClient kc = new KerberizedClient(client,
-                                            "user@REALM.COM",
-                                             Paths.get("ticket.cc"),
-                                            "HTTP/localhost@REALM.COM")    
-
 ####Login with javax.security.auth.Subject
     KerberizedClient kc = new KerberizedClient(client,
                                              subject,

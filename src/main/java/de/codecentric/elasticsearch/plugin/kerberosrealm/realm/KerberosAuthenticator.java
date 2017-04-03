@@ -54,7 +54,7 @@ public class KerberosAuthenticator {
             byte[] outToken;
 
             try {
-                final Subject subject = JaasKrbUtil.loginUsingKeytab(acceptorPrincipal, acceptorKeyTabPath, false);
+                final Subject subject = JaasKrbUtil.loginUsingKeytab(acceptorPrincipal, acceptorKeyTabPath);
 
                 final GSSManager manager = GSSManager.getInstance();
 

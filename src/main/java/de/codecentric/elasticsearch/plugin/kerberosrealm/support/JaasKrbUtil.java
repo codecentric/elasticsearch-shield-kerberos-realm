@@ -62,26 +62,13 @@ public final class JaasKrbUtil {
         return loginContext.getSubject();
     }
 
-    public static Subject loginUsingTicketCache(final String principal, final Path cachePath) throws LoginException {
+    public static Subject loginUsingKeytab(final String principal, final Path keytabPath) throws LoginException {
         final Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
 
         final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
 
-        final Configuration conf = useTicketCache(principal, cachePath);
-        final String confName = "TicketCacheConf";
-        final LoginContext loginContext = new LoginContext(confName, subject, null, conf);
-        loginContext.login();
-        return loginContext.getSubject();
-    }
-
-    public static Subject loginUsingKeytab(final String principal, final Path keytabPath, final boolean initiator) throws LoginException {
-        final Set<Principal> principals = new HashSet<>();
-        principals.add(new KerberosPrincipal(principal));
-
-        final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
-
-        final Configuration conf = useKeytab(principal, keytabPath, initiator);
+        final Configuration conf = useKeytab(principal, keytabPath);
         final String confName = "KeytabConf";
         final LoginContext loginContext = new LoginContext(confName, subject, null, conf);
         loginContext.login();
@@ -92,12 +79,8 @@ public final class JaasKrbUtil {
         return new PasswordJaasConf(principal);
     }
 
-    private static Configuration useTicketCache(final String principal, final Path credentialPath) {
-        return new TicketCacheJaasConf(principal, credentialPath);
-    }
-
-    private static Configuration useKeytab(final String principal, final Path keytabPath, final boolean initiator) {
-        return new KeytabJaasConf(principal, keytabPath, initiator);
+    private static Configuration useKeytab(final String principal, final Path keytabPath) {
+        return new KeytabJaasConf(principal, keytabPath, false);
     }
 
     private static String getKrb5LoginModuleName() {
@@ -127,33 +110,6 @@ public final class JaasKrbUtil {
             options.put("renewTGT", "false");
             options.put("refreshKrb5Config", "true");
             options.put("isInitiator", String.valueOf(initiator));
-            options.put("debug", String.valueOf(ENABLE_DEBUG));
-
-            return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
-                    AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
-        }
-    }
-
-    static class TicketCacheJaasConf extends Configuration {
-        private final String principal;
-        private final Path clientCredentialPath;
-
-        TicketCacheJaasConf(final String principal, final Path clientCredentialPath) {
-            this.principal = principal;
-            this.clientCredentialPath = clientCredentialPath;
-        }
-
-        @Override
-        public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
-            final Map<String, String> options = new HashMap<>();
-            options.put("principal", principal);
-            options.put("storeKey", "false");
-            options.put("doNotPrompt", "false");
-            options.put("useTicketCache", "true");
-            options.put("renewTGT", "true");
-            options.put("refreshKrb5Config", "true");
-            options.put("isInitiator", "true");
-            options.put("ticketCache", clientCredentialPath.toAbsolutePath().toString());
             options.put("debug", String.valueOf(ENABLE_DEBUG));
 
             return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
