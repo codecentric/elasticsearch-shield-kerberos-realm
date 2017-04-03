@@ -1,9 +1,7 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.RolesProvider;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.*;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.RestRequest;
@@ -11,30 +9,32 @@ import org.elasticsearch.shield.InternalSystemUser;
 import org.elasticsearch.shield.User;
 import org.elasticsearch.shield.authc.RealmConfig;
 import org.elasticsearch.shield.authc.support.UsernamePasswordToken;
-import org.elasticsearch.transport.TransportRequest;
+import org.elasticsearch.test.rest.FakeRestRequest;
+import org.elasticsearch.transport.TransportMessage;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.util.HashMap;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class KerberosRealmTests {
 
     private KerberosRealm kerberosRealm;
     private RolesProvider mockedRolesProvider;
-    private KerberosTokenExtractor mockedTokenExtractor;
+    private KerberosAuthenticator mockedAuthenticator;
 
     @Before
     public void before() {
         RealmConfig config = new RealmConfig("test", Settings.EMPTY, Settings.EMPTY, mock(Environment.class));
         mockedRolesProvider = mock(RolesProvider.class);
-        mockedTokenExtractor = mock(KerberosTokenExtractor.class);
+        mockedAuthenticator = mock(KerberosAuthenticator.class);
 
-        kerberosRealm = new KerberosRealm(config, mockedTokenExtractor, mockedRolesProvider);
+        kerberosRealm = new KerberosRealm(config, mockedAuthenticator, mockedRolesProvider);
     }
 
     @Test
@@ -45,7 +45,7 @@ public class KerberosRealmTests {
 
     @Test
     public void should_support_only_kerberos_tokens() {
-        KerberosToken kerberosToken = new KerberosToken(new byte[0], "");
+        KerberosToken kerberosToken = new KerberosToken(new byte[0]);
         UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(null, null);
 
         assertThat(kerberosRealm.supports(kerberosToken), is(true));
@@ -53,38 +53,39 @@ public class KerberosRealmTests {
     }
 
     @Test
-    public void should_redirect_the_token_extraction_for_rest_requests() {
-        RestRequest mockedRequest = mock(RestRequest.class);
-        kerberosRealm.token(mockedRequest);
-        verify(mockedTokenExtractor).extractToken(mockedRequest);
-    }
-
-    @Test
-    public void should_redirect_the_token_extraction_for_transport_requests() {
-        TransportRequest mockedRequest = mock(TransportRequest.class);
-        kerberosRealm.token(mockedRequest);
-
-        verify(mockedTokenExtractor).extractToken(mockedRequest);
-    }
-
-    @Test
     public void should_authenticate_liveness_token_as_interal_system_user() {
-        assertThat(kerberosRealm.authenticate(KerberosToken.LIVENESS_TOKEN), Matchers.<User>is(InternalSystemUser.INSTANCE));
+        assertThat(kerberosRealm.authenticate(LivenessToken.INSTANCE), Matchers.<User>is(InternalSystemUser.INSTANCE));
     }
 
     @Test
     public void should_not_authenticate_invalid_kerberos_tokens() {
-        KerberosToken token = new KerberosToken(new byte[0], "");
+        KerberosToken token = new KerberosToken(new byte[0]);
+        when(mockedAuthenticator.authenticate(token)).thenReturn(null);
 
         assertThat(kerberosRealm.authenticate(token), is(nullValue()));
     }
 
     @Test
+    public void should_return_null_when_rest_request_has_no_authorization_header() throws IOException {
+        RestRequest request = new FakeRestRequest(new HashMap<String, String>(), new HashMap<String, String>());
+
+        assertThat(kerberosRealm.token(request), is(nullValue()));
+    }
+
+    @Test
+    public void should_return_null_when_transport_message_has_no_authorization_header() throws IOException {
+        TransportMessage message = new ClusterHealthRequest();
+
+        assertThat(kerberosRealm.token(message), is(nullValue()));
+    }
+
+    @Test
     public void should_authenticate_valid_kerberos_tokens() {
         String principal = "principal";
+        KerberosToken token = new KerberosToken(new byte[0]);
+        when(mockedAuthenticator.authenticate(token)).thenReturn(principal);
         String[] roles = new String[]{"role 1", "role 2"};
-        Mockito.when(mockedRolesProvider.getRoles(principal)).thenReturn(roles);
-        KerberosToken token = new KerberosToken(new byte[0], principal);
+        when(mockedRolesProvider.getRoles(principal)).thenReturn(roles);
 
         User user = kerberosRealm.authenticate(token);
 

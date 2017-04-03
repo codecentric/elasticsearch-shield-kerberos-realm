@@ -18,6 +18,9 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
+import com.google.common.collect.Iterators;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.admin.cluster.node.liveness.LivenessRequest;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.shield.InternalSystemUser;
 import org.elasticsearch.shield.User;
@@ -26,19 +29,21 @@ import org.elasticsearch.shield.authc.Realm;
 import org.elasticsearch.shield.authc.RealmConfig;
 import org.elasticsearch.transport.TransportMessage;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
+import java.util.Locale;
 
 public class KerberosRealm extends Realm<KerberosToken> {
 
     public static final String TYPE = "cc-kerberos";
 
     private final RolesProvider rolesProvider;
-    private final KerberosTokenExtractor tokenExtractor;
+    private final KerberosAuthenticator kerberosAuthenticator;
 
-    public KerberosRealm(RealmConfig config, KerberosTokenExtractor tokenExtractor, RolesProvider rolesProvider) {
+    public KerberosRealm(RealmConfig config, KerberosAuthenticator kerberosAuthenticator, RolesProvider rolesProvider) {
         super(TYPE, config);
         this.rolesProvider = rolesProvider;
-        this.tokenExtractor = tokenExtractor;
+        this.kerberosAuthenticator = kerberosAuthenticator;
     }
 
     @Override
@@ -48,24 +53,56 @@ public class KerberosRealm extends Realm<KerberosToken> {
 
     @Override
     public KerberosToken token(RestRequest request) {
-        return tokenExtractor.extractToken(request);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Rest request headers: {}", Iterators.toString(request.headers().iterator()));
+        }
+        String authorizationHeader = request.header("Authorization");
+        KerberosToken token = extractToken(authorizationHeader);
+        if (token != null && logger.isDebugEnabled()) {
+            logger.debug("Rest request token '{}' for {} successully generated", token, request.path());
+        }
+        return token;
     }
 
     @Override
     public KerberosToken token(TransportMessage<?> message) {
-        return tokenExtractor.extractToken(message);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Transport request headers: {}", message.getHeaders());
+        }
+
+        if (message instanceof LivenessRequest) {
+            return LivenessToken.INSTANCE;
+        }
+
+        String authorizationHeader = message.getHeader("Authorization");
+        KerberosToken token = extractToken(authorizationHeader);
+        if (token != null && logger.isDebugEnabled()) {
+            logger.debug("Transport message token '{}' for message {} successully generated", token, message.getClass());
+        }
+        return token;
+    }
+
+    private KerberosToken extractToken(String authorizationHeader) {
+        if (authorizationHeader == null) {
+            return null;
+        } else if (!authorizationHeader.trim().toLowerCase(Locale.ENGLISH).startsWith("negotiate ")) {
+            throw new ElasticsearchException("Bad 'Authorization' header");
+        } else {
+            byte[] token = DatatypeConverter.parseBase64Binary(authorizationHeader.substring(10));
+            return new KerberosToken(token);
+        }
     }
 
     @Override
     public User authenticate(KerberosToken token) {
-        if (token == KerberosToken.LIVENESS_TOKEN) {
+        if (token instanceof LivenessToken) {
             return InternalSystemUser.INSTANCE;
         }
 
-        String actualUser = token.principal();
+        String actualUser = kerberosAuthenticator.authenticate(token);
 
-        if (!token.isValid()) {
-            logger.warn("User '{}' cannot be authenticated", actualUser);
+        if (actualUser == null) {
+            logger.warn("User cannot be authenticated");
             return null;
         }
 

@@ -17,41 +17,29 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.shield.authc.AuthenticationToken;
 
 import java.util.Objects;
 
 public class KerberosToken implements AuthenticationToken {
+    private byte[] token;
 
-    public static final KerberosToken LIVENESS_TOKEN = new KerberosToken(new byte[]{1,2,3}, "LIVENESS_TOKEN");
-    private final ESLogger logger = Loggers.getLogger(this.getClass());
-    private final String principal;
-    private byte[] outToken;
-
-    public KerberosToken(final byte[] outToken, final String principal) {
-        super();
-        this.outToken = Objects.requireNonNull(outToken);
-        this.principal = Objects.requireNonNull(principal);
+    public KerberosToken(byte[] token) {
+        this.token = Objects.requireNonNull(token);
     }
 
     @Override
     public void clearCredentials() {
-        this.outToken = null;
+        this.token = null;
     }
 
     @Override
-    public Object credentials() {
-        return outToken;
+    public byte[] credentials() {
+        return token;
     }
 
     @Override
     public String principal() {
-        return principal;
-    }
-
-    public boolean isValid() {
-        return !this.principal.isEmpty() && outToken != null;
+        return null;
     }
 }

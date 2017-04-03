@@ -1,7 +1,6 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosTokenExtractor;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticator;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;
@@ -13,7 +12,7 @@ import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 
-public class KerberosTokenExtractorTests extends ESTestCase {
+public class KerberosAuthenticatorTests extends ESTestCase {
 
     @Rule
     public ExpectedException expectedExcpetion = ExpectedException.none();
@@ -33,10 +32,9 @@ public class KerberosTokenExtractorTests extends ESTestCase {
         expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_principal");
 
         Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
                 .put("acceptor_keytab_path", "")
                 .build();
-        new KerberosTokenExtractor(new RealmConfig("test", realmSettings, globalSettings));
+        new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
     }
 
     @Test
@@ -45,10 +43,9 @@ public class KerberosTokenExtractorTests extends ESTestCase {
         expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_keytab_path");
 
         Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
                 .put("acceptor_principal", "")
                 .build();
-        new KerberosTokenExtractor(new RealmConfig("test", realmSettings, globalSettings));
+        new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
     }
 
     @Test
@@ -57,11 +54,10 @@ public class KerberosTokenExtractorTests extends ESTestCase {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
                 .put("acceptor_keytab_path", "")
                 .put("acceptor_principal", "")
                 .build();
-        new KerberosTokenExtractor(new RealmConfig("test", realmSettings, globalSettings));
+        new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
     }
 
     @Test
@@ -70,10 +66,9 @@ public class KerberosTokenExtractorTests extends ESTestCase {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("type", KerberosRealm.TYPE)
                 .put("acceptor_keytab_path", tempDirPath.toAbsolutePath())
                 .put("acceptor_principal", "")
                 .build();
-        new KerberosTokenExtractor(new RealmConfig("test", realmSettings, globalSettings));
+        new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
     }
 }
