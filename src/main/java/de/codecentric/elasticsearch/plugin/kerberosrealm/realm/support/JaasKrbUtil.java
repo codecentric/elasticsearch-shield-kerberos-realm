@@ -15,22 +15,17 @@
 
    Author: Kerby Project, Apache Software Foundation, https://directory.apache.org/kerby/
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support;
 
 //taken from the apache kerby project
 //https://directory.apache.org/kerby/
 
 import javax.security.auth.Subject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.util.HashMap;
@@ -48,20 +43,6 @@ public final class JaasKrbUtil {
     private JaasKrbUtil() {
     }
 
-    public static Subject loginUsingPassword(final String principal, final String password) throws LoginException {
-        final Set<Principal> principals = new HashSet<>();
-        principals.add(new KerberosPrincipal(principal));
-
-        final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
-
-        final Configuration conf = usePassword(principal);
-        final String confName = "PasswordConf";
-        final CallbackHandler callback = new KrbCallbackHandler(principal, password);
-        final LoginContext loginContext = new LoginContext(confName, subject, callback, conf);
-        loginContext.login();
-        return loginContext.getSubject();
-    }
-
     public static Subject loginUsingKeytab(final String principal, final Path keytabPath) throws LoginException {
         final Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
@@ -73,10 +54,6 @@ public final class JaasKrbUtil {
         final LoginContext loginContext = new LoginContext(confName, subject, null, conf);
         loginContext.login();
         return loginContext.getSubject();
-    }
-
-    private static Configuration usePassword(final String principal) {
-        return new PasswordJaasConf(principal);
     }
 
     private static Configuration useKeytab(final String principal, final Path keytabPath) {
@@ -116,52 +93,4 @@ public final class JaasKrbUtil {
                     AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
         }
     }
-
-    static class PasswordJaasConf extends Configuration {
-        private final String principal;
-
-        PasswordJaasConf(final String principal) {
-            this.principal = principal;
-        }
-
-        @Override
-        public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
-            final Map<String, String> options = new HashMap<>();
-            options.put("principal", principal);
-            options.put("storeKey", "true");
-            options.put("useTicketCache", "true");
-            options.put("useKeyTab", "false");
-            options.put("renewTGT", "true");
-            options.put("refreshKrb5Config", "true");
-            options.put("isInitiator", "true");
-            options.put("debug", String.valueOf(ENABLE_DEBUG));
-
-            return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
-                    AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
-        }
-    }
-
-    public static class KrbCallbackHandler implements CallbackHandler {
-        private final String principal;
-        private final String password;
-
-        KrbCallbackHandler(final String principal, final String password) {
-            this.principal = principal;
-            this.password = password;
-        }
-
-        @Override
-        public void handle(final Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-            for (Callback callback : callbacks) {
-                if (callback instanceof PasswordCallback) {
-                    final PasswordCallback pc = (PasswordCallback) callback;
-                    if (pc.getPrompt().contains(principal)) {
-                        pc.setPassword(password.toCharArray());
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
 }

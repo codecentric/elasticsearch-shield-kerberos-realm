@@ -15,7 +15,7 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support;
 
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.Oid;

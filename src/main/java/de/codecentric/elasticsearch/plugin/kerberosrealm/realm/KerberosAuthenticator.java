@@ -1,6 +1,6 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.JaasKrbUtil;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.JaasKrbUtil;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.common.logging.ESLogger;
@@ -15,7 +15,7 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
-import static de.codecentric.elasticsearch.plugin.kerberosrealm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
+import static de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.GSSUtil.GSS_SPNEGO_MECH_OID;
 
 public class KerberosAuthenticator {
 

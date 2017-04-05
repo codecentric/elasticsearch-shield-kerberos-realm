@@ -22,9 +22,6 @@ Apache License Version 2.0
 [Stackoverflow](http://stackoverflow.com/questions/ask?tags=es-kerberos+elasticsearch)  
 [Twitter @hendrikdev22](https://twitter.com/hendrikdev22)
 
-###Commercial support
-Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.de)
-
 ###Prerequisites
 
 * Elasticsearch 2.4.4
@@ -37,7 +34,7 @@ Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.
     $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.4.4.zip
 
 ###Build and install latest
-    $ git clone https://github.com/codecentric/elasticsearch-shield-kerberos-realm.git
+    $ git clone https://github.com/robertvolkmann/elasticsearch-shield-kerberos-realm.git
     $ mvn package
     $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.4.4.zip
 
@@ -62,36 +59,3 @@ Configuration is done in elasticsearch.yml
 * ``de.codecentric.realm.cc-kerberos.krb_debug`` - If true a whole bunch of kerberos/security related debugging output will be logged to standard out
 * ``de.codecentric.realm.cc-kerberos.krb5.file_path`` - Absolute path to krb5.conf file.
 * ``security.manager.enabled`` - Must currently be set to ``false``. This will likely change with Elasticsearch 2.2, see [PR 14108](https://github.com/elastic/elasticsearch/pull/14108)
-
-
-###REST/HTTP authentication
-
-    $ kinit
-    $ curl --negotiate -u : "http://localhost:9200/_logininfo?pretty"
-
-Or with a browser that supports SPNEGO like Chrome or Firefox
-
-###Transport authentication
-
-    try (TransportClient client = TransportClient.builder().settings(settings).build()) {
-        client.addTransportAddress(nodes[0].getTransport().address().publishAddress());
-            try (KerberizedClient kc = new KerberizedClient(client,
-                                            "user@REALM.COM",
-                                            "secret",
-                                            "HTTP/localhost@REALM.COM")) {
-
-                ClusterHealthResponse response = kc.admin().cluster().prepareHealth().execute().actionGet();
-                assertThat(response.isTimedOut(), is(false));
-            }
-    }
-
-####Login with password
-    KerberizedClient kc = new KerberizedClient(client,
-                                            "user@REALM.COM",
-                                            "secret",
-                                            "HTTP/localhost@REALM.COM")
-
-####Login with javax.security.auth.Subject
-    KerberizedClient kc = new KerberizedClient(client,
-                                             subject,
-                                            "HTTP/localhost@REALM.COM")    

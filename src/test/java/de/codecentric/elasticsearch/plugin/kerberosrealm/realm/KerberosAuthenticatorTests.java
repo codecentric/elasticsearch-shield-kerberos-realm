@@ -1,6 +1,5 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticator;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;

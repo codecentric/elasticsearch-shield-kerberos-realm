@@ -15,7 +15,7 @@
 
    Author: Hendrik Saly <hendrik.saly@codecentric.de>
  */
-package de.codecentric.elasticsearch.plugin.kerberosrealm.support;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support;
 
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import org.elasticsearch.ExceptionsHelper;

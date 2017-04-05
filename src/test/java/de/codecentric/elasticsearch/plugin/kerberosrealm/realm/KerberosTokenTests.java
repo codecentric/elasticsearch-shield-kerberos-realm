@@ -1,6 +1,5 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosToken.KerberosTokenFactory;
 import org.elasticsearch.ElasticsearchException;
 import org.junit.Rule;

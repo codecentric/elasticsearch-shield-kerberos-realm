@@ -1,6 +1,5 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.RolesProvider;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.shield.authc.RealmConfig;

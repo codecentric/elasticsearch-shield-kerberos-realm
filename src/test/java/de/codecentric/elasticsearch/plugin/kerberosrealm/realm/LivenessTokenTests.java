@@ -1,6 +1,5 @@
-package de.codecentric.elasticsearch.plugin.kerberosrealm;
+package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.LivenessToken;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;

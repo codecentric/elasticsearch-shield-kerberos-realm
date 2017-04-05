@@ -20,7 +20,7 @@ package de.codecentric.elasticsearch.plugin.kerberosrealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
 import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.PropertyUtil;
 import org.elasticsearch.common.SuppressForbidden;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
