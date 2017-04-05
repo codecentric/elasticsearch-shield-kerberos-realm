@@ -37,7 +37,7 @@ public class KerberosRealmPlugin extends Plugin {
     private final boolean client;
     private final Settings settings;
 
-    public KerberosRealmPlugin(final Settings settings) {
+    public KerberosRealmPlugin(Settings settings) {
         this.settings = settings;
         client = !"node".equals(settings.get(CLIENT_TYPE, "node"));
         logger.info("Start Kerberos Realm Plugin (mode: {})", settings.get(CLIENT_TYPE));
@@ -54,7 +54,7 @@ public class KerberosRealmPlugin extends Plugin {
     }
 
     @SuppressForbidden(reason = "proper use of Paths.get()")
-    public void onModule(final AuthenticationModule authenticationModule) {
+    public void onModule(AuthenticationModule authenticationModule) {
         if (!client) {
             PropertyUtil.initKerberosProps(settings, Paths.get("/"));
             authenticationModule.addCustomRealm(KerberosRealm.TYPE, KerberosRealmFactory.class);

@@ -33,99 +33,98 @@ public class KerberosAuthenticationFailureHandler extends DefaultAuthenticationF
     private final ESLogger logger = Loggers.getLogger(this.getClass());
 
     @Override
-    public ElasticsearchSecurityException unsuccessfulAuthentication(final RestRequest request, final AuthenticationToken token) {
-        final ElasticsearchSecurityException e = super.unsuccessfulAuthentication(request, token);
-        e.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
+    public ElasticsearchSecurityException unsuccessfulAuthentication(RestRequest request, AuthenticationToken token) {
+        ElasticsearchSecurityException securityException = super.unsuccessfulAuthentication(request, token);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
         if (logger.isDebugEnabled()) {
             logger.debug("unsuccessfulAuthentication for rest request and token {}", token);
         }
-        return e;
+        return securityException;
     }
 
     @Override
-    public ElasticsearchSecurityException missingToken(final RestRequest request) {
-        final ElasticsearchSecurityException e = super.missingToken(request);
-        e.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
+    public ElasticsearchSecurityException missingToken(RestRequest request) {
+        ElasticsearchSecurityException securityException = super.missingToken(request);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
         if (logger.isDebugEnabled()) {
             logger.debug("missing token for rest request");
         }
-        return e;
+        return securityException;
     }
 
     @Override
-    public ElasticsearchSecurityException exceptionProcessingRequest(final RestRequest request, final Exception e) {
-        final ElasticsearchSecurityException se = super.exceptionProcessingRequest(request, e);
+    public ElasticsearchSecurityException exceptionProcessingRequest(RestRequest request, Exception exception) {
+        ElasticsearchSecurityException securityException = super.exceptionProcessingRequest(request, exception);
         String outToken = "";
-        if (e instanceof ElasticsearchException) {
-            final ElasticsearchException kae = (ElasticsearchException) e;
-            if (kae.getHeader("kerberos_out_token") != null) {
-                outToken = " " + kae.getHeader("kerberos_out_token").get(0);
+        if (exception instanceof ElasticsearchException) {
+            ElasticsearchException elasticsearchException = (ElasticsearchException) exception;
+            if (elasticsearchException.getHeader("kerberos_out_token") != null) {
+                outToken = " " + elasticsearchException.getHeader("kerberos_out_token").get(0);
             }
         }
 
-        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE + outToken);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE + outToken);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("exception for rest request: {}", e.toString());
+            logger.debug("exception for rest request: {}", exception.toString());
         }
 
-        return se;
+        return securityException;
     }
 
     @Override
-    public ElasticsearchSecurityException authenticationRequired(final String action) {
-        final ElasticsearchSecurityException se = super.authenticationRequired(action);
-        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
+    public ElasticsearchSecurityException authenticationRequired(String action) {
+        ElasticsearchSecurityException securityException = super.authenticationRequired(action);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 
         if (logger.isDebugEnabled()) {
             logger.debug("authentication required for action {}", action);
         }
-        return se;
+        return securityException;
     }
 
     @Override
-    public ElasticsearchSecurityException exceptionProcessingRequest(final TransportMessage message, final Exception e) {
-        final ElasticsearchSecurityException se = super.exceptionProcessingRequest(message, e);
+    public ElasticsearchSecurityException exceptionProcessingRequest(TransportMessage message, Exception exception) {
+        ElasticsearchSecurityException securityException = super.exceptionProcessingRequest(message, exception);
         String outToken = "";
 
-        if (e instanceof ElasticsearchException) {
-            final ElasticsearchException kae = (ElasticsearchException) e;
-            if (kae.getHeader("kerberos_out_token") != null) {
-                outToken = " " + kae.getHeader("kerberos_out_token").get(0);
+        if (exception instanceof ElasticsearchException) {
+            final ElasticsearchException elasticsearchException = (ElasticsearchException) exception;
+            if (elasticsearchException.getHeader("kerberos_out_token") != null) {
+                outToken = " " + elasticsearchException.getHeader("kerberos_out_token").get(0);
             }
         }
-        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE + outToken);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE + outToken);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("exception for transport message: {}", e.toString());
+            logger.debug("exception for transport message: {}", exception.toString());
         }
 
-        return se;
+        return securityException;
     }
 
     @Override
-    public ElasticsearchSecurityException missingToken(final TransportMessage message, final String action) {
-        final ElasticsearchSecurityException se = super.missingToken(message, action);
-        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
+    public ElasticsearchSecurityException missingToken(TransportMessage message, String action) {
+        ElasticsearchSecurityException securityException = super.missingToken(message, action);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 
         if (logger.isDebugEnabled()) {
             logger.debug("missing token for {} transport message", action);
         }
 
-        return se;
+        return securityException;
     }
 
     @Override
-    public ElasticsearchSecurityException unsuccessfulAuthentication(final TransportMessage message, final AuthenticationToken token,
-            final String action) {
-        final ElasticsearchSecurityException se = super.unsuccessfulAuthentication(message, token, action);
-        se.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
+    public ElasticsearchSecurityException unsuccessfulAuthentication(TransportMessage message, AuthenticationToken token, String action) {
+        ElasticsearchSecurityException securityException = super.unsuccessfulAuthentication(message, token, action);
+        securityException.addHeader(WWW_AUTHENTICATE, NEGOTIATE);
 
         if (logger.isDebugEnabled()) {
             logger.debug("unsuccessfulAuthentication for {} transport message and token {}", action, token);
         }
 
-        return se;
+        return securityException;
     }
 
 }
