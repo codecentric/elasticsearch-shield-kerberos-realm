@@ -49,15 +49,11 @@ public final class JaasKrbUtil {
 
         final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
 
-        final Configuration conf = useKeytab(principal, keytabPath);
+        final Configuration conf = new KeytabJaasConf(principal, keytabPath);
         final String confName = "KeytabConf";
         final LoginContext loginContext = new LoginContext(confName, subject, null, conf);
         loginContext.login();
         return loginContext.getSubject();
-    }
-
-    private static Configuration useKeytab(final String principal, final Path keytabPath) {
-        return new KeytabJaasConf(principal, keytabPath, false);
     }
 
     private static String getKrb5LoginModuleName() {
@@ -68,16 +64,14 @@ public final class JaasKrbUtil {
     static class KeytabJaasConf extends Configuration {
         private final String principal;
         private final Path keytabPath;
-        private final boolean initiator;
 
-        KeytabJaasConf(final String principal, final Path keytab, final boolean initiator) {
+        KeytabJaasConf(final String principal, final Path keytab) {
             this.principal = principal;
             this.keytabPath = keytab;
-            this.initiator = initiator;
         }
 
         @Override
-        public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
+        public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
             final Map<String, String> options = new HashMap<>();
             options.put("keyTab", keytabPath.toAbsolutePath().toString());
             options.put("principal", principal);
@@ -86,11 +80,11 @@ public final class JaasKrbUtil {
             options.put("doNotPrompt", "true");
             options.put("renewTGT", "false");
             options.put("refreshKrb5Config", "true");
-            options.put("isInitiator", String.valueOf(initiator));
+            options.put("isInitiator", "false");
             options.put("debug", String.valueOf(ENABLE_DEBUG));
 
-            return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
-                    AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
+            return new AppConfigurationEntry[]{new AppConfigurationEntry(getKrb5LoginModuleName(),
+                    AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options)};
         }
     }
 }
