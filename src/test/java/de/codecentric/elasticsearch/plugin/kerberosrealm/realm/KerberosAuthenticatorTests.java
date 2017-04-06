@@ -1,28 +1,27 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
+import de.codecentric.elasticsearch.plugin.kerberosrealm.utils.TemporaryFilesRule;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;
-import org.elasticsearch.test.ESTestCase;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.nio.file.Path;
+public class KerberosAuthenticatorTests {
 
-public class KerberosAuthenticatorTests extends ESTestCase {
+    @Rule
+    public TemporaryFilesRule temporaryFilesRule = new TemporaryFilesRule();
 
     @Rule
     public ExpectedException expectedExcpetion = ExpectedException.none();
 
-    private Path tempDirPath;
     private Settings globalSettings;
 
     @Before
     public void before() {
-        tempDirPath = createTempDir("tempdir-unittest");
-        globalSettings = Settings.builder().put("path.home", tempDirPath).build();
+        globalSettings = Settings.builder().put("path.home", temporaryFilesRule.getRoot()).build();
     }
 
     @Test
@@ -65,7 +64,7 @@ public class KerberosAuthenticatorTests extends ESTestCase {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", tempDirPath.toAbsolutePath())
+                .put("acceptor_keytab_path", temporaryFilesRule.getRoot().toAbsolutePath())
                 .put("acceptor_principal", "")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
