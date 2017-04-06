@@ -36,14 +36,12 @@ import java.util.Set;
 /**
  * JAAS utilities for Kerberos login.
  */
-public final class JaasKrbUtil {
+public class JaasKrbUtil {
 
+    private static final String KRB5_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule";
     static boolean ENABLE_DEBUG = false;
 
-    private JaasKrbUtil() {
-    }
-
-    public static Subject loginUsingKeytab(final String principal, final Path keytabPath) throws LoginException {
+    public Subject loginUsingKeytab(final String principal, final Path keytabPath) throws LoginException {
         final Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
 
@@ -56,12 +54,7 @@ public final class JaasKrbUtil {
         return loginContext.getSubject();
     }
 
-    private static String getKrb5LoginModuleName() {
-        return System.getProperty("java.vendor").contains("IBM") ? "com.ibm.security.auth.module.Krb5LoginModule"
-                : "com.sun.security.auth.module.Krb5LoginModule";
-    }
-
-    static class KeytabJaasConf extends Configuration {
+    private static class KeytabJaasConf extends Configuration {
         private final String principal;
         private final Path keytabPath;
 
@@ -83,7 +76,7 @@ public final class JaasKrbUtil {
             options.put("isInitiator", "false");
             options.put("debug", String.valueOf(ENABLE_DEBUG));
 
-            return new AppConfigurationEntry[]{new AppConfigurationEntry(getKrb5LoginModuleName(),
+            return new AppConfigurationEntry[]{new AppConfigurationEntry(KRB5_LOGIN_MODULE,
                     AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options)};
         }
     }

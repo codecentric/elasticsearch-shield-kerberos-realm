@@ -4,10 +4,7 @@ import org.elasticsearch.common.SuppressForbidden;
 import org.junit.rules.ExternalResource;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 @SuppressForbidden(reason = "platform independent")
@@ -16,7 +13,7 @@ public class TemporaryFilesRule  extends ExternalResource {
 
     @Override
     protected void before() throws IOException {
-        this.tempDirectory = Files.createTempDirectory("kerberos-realm");
+        this.tempDirectory = Files.createTempDirectory(Paths.get(""), "kerberos-realm");
     }
 
     public Path getRoot() {
@@ -41,10 +38,10 @@ public class TemporaryFilesRule  extends ExternalResource {
 
     @Override
     protected void after() {
-        try {
-            this.delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            this.delete();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }
