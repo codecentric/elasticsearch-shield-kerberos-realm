@@ -23,7 +23,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class KerberosRealmTests {
+public class KerberosRealmTest {
 
     private KerberosRealm kerberosRealm;
     private RolesProvider mockedRolesProvider;

@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertThat;
 
-public class KerberosTokenTests {
+public class KerberosTokenTest {
 
     @Rule
     public ExpectedException expectedExcpetion = ExpectedException.none();

@@ -9,7 +9,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class RolesProviderTests {
+public class RolesProviderTest {
 
     @Test
     public void should_return_the_roles_of_a_user() {

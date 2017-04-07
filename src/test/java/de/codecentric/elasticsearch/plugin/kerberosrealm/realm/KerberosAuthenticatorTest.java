@@ -9,7 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class KerberosAuthenticatorTests {
+public class KerberosAuthenticatorTest {
 
     @Rule
     public TemporaryFilesRule temporaryFilesRule = new TemporaryFilesRule();
@@ -60,6 +60,18 @@ public class KerberosAuthenticatorTests {
 
     @Test
     public void should_throw_elasticsearch_exception_when_acceptor_keytab_is_a_directory() {
+        expectedExcpetion.expect(ElasticsearchException.class);
+        expectedExcpetion.expectMessage("File not found or not readable");
+
+        Settings realmSettings = Settings.builder()
+                .put("acceptor_keytab_path", temporaryFilesRule.getRoot().toAbsolutePath())
+                .put("acceptor_principal", "")
+                .build();
+        new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
+    }
+
+    @Test
+    public void should_not_authenticate_empty_token() {
         expectedExcpetion.expect(ElasticsearchException.class);
         expectedExcpetion.expectMessage("File not found or not readable");
 

@@ -38,10 +38,10 @@ public class TemporaryFilesRule  extends ExternalResource {
 
     @Override
     protected void after() {
-//        try {
-//            this.delete();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            this.delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

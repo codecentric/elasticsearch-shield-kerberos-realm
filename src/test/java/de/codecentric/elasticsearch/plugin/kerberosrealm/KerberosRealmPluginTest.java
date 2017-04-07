@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class KerberosRealmPluginTests {
+public class KerberosRealmPluginTest {
 
     @Test
     public void should_return_its_name() {

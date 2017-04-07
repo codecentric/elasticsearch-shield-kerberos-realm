@@ -12,7 +12,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertThat;
 
-public class KerberosAuthenticationFailureHandlerTests {
+public class KerberosAuthenticationFailureHandlerTest {
 
     private static final String NEGOTIATE = "Negotiate";
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";

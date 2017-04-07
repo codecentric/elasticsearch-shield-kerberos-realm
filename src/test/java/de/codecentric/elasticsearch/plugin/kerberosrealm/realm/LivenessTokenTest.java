@@ -6,7 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class LivenessTokenTests {
+public class LivenessTokenTest {
 
     @Test
     public void should_not_clear_credentials() {

@@ -6,7 +6,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
-public class KerberosRealmFactoryTests {
+public class KerberosRealmFactoryTest {
 
     @Test
     public void should_not_create_a_kerberos_realm_without_any_config() {
