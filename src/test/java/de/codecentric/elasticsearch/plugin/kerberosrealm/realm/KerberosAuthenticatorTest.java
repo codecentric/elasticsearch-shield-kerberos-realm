@@ -1,6 +1,5 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.utils.TemporaryFilesRule;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.shield.authc.RealmConfig;
@@ -8,11 +7,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 
 public class KerberosAuthenticatorTest {
 
     @Rule
-    public TemporaryFilesRule temporaryFilesRule = new TemporaryFilesRule();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Rule
     public ExpectedException expectedExcpetion = ExpectedException.none();
@@ -21,7 +21,9 @@ public class KerberosAuthenticatorTest {
 
     @Before
     public void before() {
-        globalSettings = Settings.builder().put("path.home", temporaryFilesRule.getRoot()).build();
+        globalSettings = Settings.builder()
+                .put("path.home", temporaryFolder.getRoot().getAbsolutePath())
+                .build();
     }
 
     @Test
@@ -64,7 +66,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", temporaryFilesRule.getRoot().toAbsolutePath())
+                .put("acceptor_keytab_path", temporaryFolder.getRoot().getAbsolutePath())
                 .put("acceptor_principal", "")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
@@ -76,7 +78,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", temporaryFilesRule.getRoot().toAbsolutePath())
+                .put("acceptor_keytab_path", temporaryFolder.getRoot().getAbsolutePath())
                 .put("acceptor_principal", "")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
