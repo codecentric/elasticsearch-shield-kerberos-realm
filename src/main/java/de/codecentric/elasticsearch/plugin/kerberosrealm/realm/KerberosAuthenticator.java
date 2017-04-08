@@ -1,8 +1,9 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.JaasKrbUtil;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.LoginUsingKeytab;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ExceptionsHelper;
+import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.shield.authc.RealmConfig;
 import org.ietf.jgss.*;
@@ -11,6 +12,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -46,38 +48,44 @@ public class KerberosAuthenticator {
         }
     }
 
-    public String authenticate(KerberosToken token) {
+    private Subject loginUsingKeytab() {
+        try {
+            return new LoginUsingKeytab(acceptorPrincipal, acceptorKeyTabPath).login();
+        } catch (LoginException e) {
+            logger.error("Login exception due to {}", e, e.toString());
+            throw ExceptionsHelper.convertToRuntime(e);
+        }
+    }
+
+    public String authenticate(final KerberosToken token) {
         String username;
 
         if (token.credentials() != null && acceptorKeyTabPath != null && acceptorPrincipal != null) {
             GSSContext gssContext = null;
             byte[] outToken;
+            SecurityManager securityManager = System.getSecurityManager();
+
+            if (securityManager != null) {
+                securityManager.checkPermission(new SpecialPermission());
+            }
+
+            final Subject subject = this.loginUsingKeytab();
 
             try {
-                final Subject subject = new JaasKrbUtil().loginUsingKeytab(acceptorPrincipal, acceptorKeyTabPath);
-
                 final GSSManager manager = GSSManager.getInstance();
+                GSSCredential gssCredential = AccessController.doPrivileged(new CreateCredentialAction(subject, manager));
 
-                final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
-                    @Override
-                    public GSSCredential run() throws GSSException {
-                        return manager.createCredential(null, GSSCredential.INDEFINITE_LIFETIME, GSS_SPNEGO_MECH_OID, GSSCredential.ACCEPT_ONLY);
-                    }
-                };
-                gssContext = manager.createContext(Subject.doAs(subject, action));
+                gssContext = manager.createContext(gssCredential);
 
-                outToken = Subject.doAs(subject, new AcceptAction(gssContext, token.credentials()));
+                outToken = AccessController.doPrivileged(new AcceptAction(subject, gssContext, token.credentials()));
 
                 if (outToken == null) {
                     logger.warn("Ticket validation not successful, outToken is null");
                     return null;
                 }
 
-                username = Subject.doAs(subject, new AuthenticateAction(logger, gssContext));
+                username = AccessController.doPrivileged(new AuthenticateAction(subject, logger, gssContext));
 
-            } catch (final LoginException e) {
-                logger.error("Login exception due to {}", e, e.toString());
-                throw ExceptionsHelper.convertToRuntime(e);
             } catch (final GSSException e) {
                 logger.error("Ticket validation not successful due to {}", e, e.toString());
                 throw ExceptionsHelper.convertToRuntime(e);
@@ -93,8 +101,7 @@ public class KerberosAuthenticator {
                 if (gssContext != null) {
                     try {
                         gssContext.dispose();
-                    } catch (final GSSException e) {
-                        // Ignore
+                    } catch (final GSSException ignored) {
                     }
                 }
                 //TODO subject logout
@@ -105,23 +112,58 @@ public class KerberosAuthenticator {
         }
     }
 
+    private static class CreateCredentialAction implements PrivilegedExceptionAction<GSSCredential> {
+
+        private final Subject subject;
+        private GSSManager manager;
+
+        CreateCredentialAction(Subject subject, GSSManager manager) {
+            this.subject = subject;
+            this.manager = manager;
+        }
+
+        @Override
+        public GSSCredential run() throws GSSException {
+            try {
+                return Subject.doAs(subject, new PrivilegedExceptionAction<GSSCredential>() {
+                    @Override
+                    public GSSCredential run() throws GSSException {
+                        return manager.createCredential(null, GSSCredential.DEFAULT_LIFETIME, GSS_SPNEGO_MECH_OID, GSSCredential.ACCEPT_ONLY);
+                    }
+                });
+            } catch (PrivilegedActionException e) {
+                throw (GSSException) e.getException();
+            }
+        }
+    }
+
     /**
      * This class gets a gss credential via a privileged action.
      */
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
     private static class AcceptAction implements PrivilegedExceptionAction<byte[]> {
-        GSSContext gssContext;
+        private final Subject subject;
+        private final GSSContext gssContext;
+        private final byte[] decoded;
 
-        byte[] decoded;
-
-        AcceptAction(final GSSContext context, final byte[] decodedToken) {
+        AcceptAction(Subject subject, GSSContext context, byte[] decodedToken) {
+            this.subject = subject;
             this.gssContext = context;
             this.decoded = decodedToken;
         }
 
         @Override
         public byte[] run() throws GSSException {
-            return gssContext.acceptSecContext(decoded, 0, decoded.length);
+            try {
+                return Subject.doAs(subject, new PrivilegedExceptionAction<byte[]>() {
+                    @Override
+                    public byte[] run() throws Exception {
+                        return gssContext.acceptSecContext(decoded, 0, decoded.length);
+                    }
+                });
+            } catch (PrivilegedActionException e) {
+                throw (GSSException) e.getException();
+            }
         }
     }
 
@@ -146,18 +188,24 @@ public class KerberosAuthenticator {
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
     private static class AuthenticateAction implements PrivilegedAction<String> {
 
+        private final Subject subject;
         private final ESLogger logger;
         private final GSSContext gssContext;
 
-        private AuthenticateAction(final ESLogger logger, final GSSContext gssContext) {
-            super();
+        private AuthenticateAction(Subject subject, ESLogger logger, GSSContext gssContext) {
+            this.subject = subject;
             this.logger = logger;
             this.gssContext = gssContext;
         }
 
         @Override
         public String run() {
-            return getUsernameFromGSSContext(gssContext, logger);
+            return Subject.doAs(subject, new PrivilegedAction<String>() {
+                @Override
+                public String run() {
+                    return getUsernameFromGSSContext(gssContext, logger);
+                }
+            });
         }
     }
 }

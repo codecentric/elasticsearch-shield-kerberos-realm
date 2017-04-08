@@ -9,5 +9,3 @@ shield.authc.realms.kerb:
 
 de.codecentric.realm.cc-kerberos.krb5.file_path: /usr/share/elasticsearch/config/kerberos/krb5.conf
 de.codecentric.realm.cc-kerberos.krb_debug: true
-
-security.manager.enabled: false

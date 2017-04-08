@@ -87,6 +87,7 @@
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
                 <excludes>
+                    <exclude>*.policy</exclude>
                     <exclude>*.properties</exclude>
                 </excludes>
             </resource>

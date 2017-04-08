@@ -17,55 +17,67 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support;
 
-//taken from the apache kerby project
-//https://directory.apache.org/kerby/
-
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.nio.file.Path;
+import java.security.AccessController;
 import java.security.Principal;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * JAAS utilities for Kerberos login.
- */
-public class JaasKrbUtil {
+public class LoginUsingKeytab {
 
     private static final String KRB5_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule";
     static boolean ENABLE_DEBUG = false;
+    private final KeytabConfiguration configuration;
+    private final Subject subject;
 
-    public Subject loginUsingKeytab(final String principal, final Path keytabPath) throws LoginException {
-        final Set<Principal> principals = new HashSet<>();
+    public LoginUsingKeytab(String principal, Path keytabPath) throws LoginException {
+        Set<Principal> principals = new HashSet<>();
         principals.add(new KerberosPrincipal(principal));
 
-        final Subject subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
+        subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
+        configuration = new KeytabConfiguration(principal, keytabPath);
 
-        final Configuration conf = new KeytabJaasConf(principal, keytabPath);
-        final String confName = "KeytabConf";
-        final LoginContext loginContext = new LoginContext(confName, subject, null, conf);
-        loginContext.login();
-        return loginContext.getSubject();
     }
 
-    private static class KeytabJaasConf extends Configuration {
+    public Subject login() throws LoginException {
+        try {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<Subject>() {
+                @Override
+                public Subject run() throws LoginException {
+                    LoginContext loginContext = new LoginContext("KeytabConfiguration", subject, null, configuration);
+
+                    loginContext.login();
+                    return loginContext.getSubject();
+                }
+            });
+        } catch (PrivilegedActionException e) {
+            throw  (LoginException) e.getException();
+        }
+    }
+
+    private static class KeytabConfiguration extends Configuration {
         private final String principal;
         private final Path keytabPath;
 
-        KeytabJaasConf(final String principal, final Path keytab) {
+        KeytabConfiguration(String principal, Path keytab) {
             this.principal = principal;
             this.keytabPath = keytab;
         }
 
         @Override
         public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-            final Map<String, String> options = new HashMap<>();
+            Map<String, String> options = new HashMap<>();
             options.put("keyTab", keytabPath.toAbsolutePath().toString());
             options.put("principal", principal);
             options.put("useKeyTab", "true");
@@ -76,8 +88,9 @@ public class JaasKrbUtil {
             options.put("isInitiator", "false");
             options.put("debug", String.valueOf(ENABLE_DEBUG));
 
-            return new AppConfigurationEntry[]{new AppConfigurationEntry(KRB5_LOGIN_MODULE,
-                    AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options)};
+            return new AppConfigurationEntry[]{
+                    new AppConfigurationEntry(KRB5_LOGIN_MODULE, LoginModuleControlFlag.REQUIRED, options)
+            };
         }
     }
 }

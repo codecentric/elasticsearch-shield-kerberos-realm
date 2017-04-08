@@ -61,7 +61,7 @@ public class PropertyUtil {
         if (krbDebug) {
             System.out.println("Kerberos Realm debug is enabled");
             log.error("NOT AN ERROR: Kerberos Realm debug is enabled");
-            JaasKrbUtil.ENABLE_DEBUG = true;
+            LoginUsingKeytab.ENABLE_DEBUG = true;
             System.setProperty("sun.security.krb5.debug", "true");
             System.setProperty("java.security.debug", "all");
             System.setProperty("java.security.auth.debug", "all");

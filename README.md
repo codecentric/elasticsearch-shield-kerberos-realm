@@ -50,7 +50,6 @@ Configuration is done in elasticsearch.yml
     shield.authc.realms.cc-kerberos.strip_realm_from_principal: true
     de.codecentric.realm.cc-kerberos.krb5.file_path: /etc/krb5.conf
     de.codecentric.realm.cc-kerberos.krb_debug: false
-    security.manager.enabled: false
 
 * ``acceptor_keytab_path`` - The absolute path to the keytab where the acceptor_principal credentials are stored.
 * ``acceptor_principal`` - Acceptor (Server) Principal name, must be present in acceptor_keytab_path file
@@ -58,4 +57,3 @@ Configuration is done in elasticsearch.yml
 * ``strip_realm_from_principal`` - If true then the realm will be stripped from the user name
 * ``de.codecentric.realm.cc-kerberos.krb_debug`` - If true a whole bunch of kerberos/security related debugging output will be logged to standard out
 * ``de.codecentric.realm.cc-kerberos.krb5.file_path`` - Absolute path to krb5.conf file.
-* ``security.manager.enabled`` - Must currently be set to ``false``. This will likely change with Elasticsearch 2.2, see [PR 14108](https://github.com/elastic/elasticsearch/pull/14108)
