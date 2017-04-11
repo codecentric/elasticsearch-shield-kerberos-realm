@@ -33,7 +33,7 @@ public class KerberosAuthenticator {
         acceptorPrincipal = config.settings().get(ACCEPTOR_PRINCIPAL, null);
         final String acceptorKeyTab = config.settings().get(ACCEPTOR_KEYTAB_PATH, null);
 
-        if (acceptorPrincipal == null) {
+        if (acceptorPrincipal == null || acceptorPrincipal.isEmpty()) {
             throw new ElasticsearchException("Unconfigured (but required) property: {}", ACCEPTOR_PRINCIPAL);
         }
 
@@ -96,7 +96,7 @@ public class KerberosAuthenticator {
                 } else {
                     logger.error("Service login not successful due to {}", e, e.toString());
                 }
-                throw ExceptionsHelper.convertToRuntime(e);
+                throw ExceptionsHelper.convertToRuntime(cause);
             } finally {
                 if (gssContext != null) {
                     try {

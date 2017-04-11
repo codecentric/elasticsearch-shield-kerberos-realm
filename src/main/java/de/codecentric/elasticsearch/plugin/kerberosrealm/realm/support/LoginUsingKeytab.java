@@ -18,7 +18,6 @@
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support;
 
 import javax.security.auth.Subject;
-import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
@@ -26,28 +25,19 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.nio.file.Path;
 import java.security.AccessController;
-import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class LoginUsingKeytab {
 
     private static final String KRB5_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule";
     static boolean ENABLE_DEBUG = false;
     private final KeytabConfiguration configuration;
-    private final Subject subject;
 
     public LoginUsingKeytab(String principal, Path keytabPath) throws LoginException {
-        Set<Principal> principals = new HashSet<>();
-        principals.add(new KerberosPrincipal(principal));
-
-        subject = new Subject(false, principals, new HashSet<>(), new HashSet<>());
         configuration = new KeytabConfiguration(principal, keytabPath);
-
     }
 
     public Subject login() throws LoginException {
@@ -55,7 +45,7 @@ public class LoginUsingKeytab {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<Subject>() {
                 @Override
                 public Subject run() throws LoginException {
-                    LoginContext loginContext = new LoginContext("KeytabConfiguration", subject, null, configuration);
+                    LoginContext loginContext = new LoginContext("KeytabConfiguration", null, null, configuration);
 
                     loginContext.login();
                     return loginContext.getSubject();
@@ -83,9 +73,9 @@ public class LoginUsingKeytab {
             options.put("useKeyTab", "true");
             options.put("storeKey", "true");
             options.put("doNotPrompt", "true");
+            options.put("isInitiator", "false");
             options.put("renewTGT", "false");
             options.put("refreshKrb5Config", "true");
-            options.put("isInitiator", "false");
             options.put("debug", String.valueOf(ENABLE_DEBUG));
 
             return new AppConfigurationEntry[]{

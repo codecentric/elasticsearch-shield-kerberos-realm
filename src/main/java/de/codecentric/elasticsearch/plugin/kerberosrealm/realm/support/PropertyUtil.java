@@ -35,7 +35,6 @@ public class PropertyUtil {
     private static final String KRB_DEBUG = PREFIX + "krb_debug";
     private static final String KRB5_CONF_PROP = "java.security.krb5.conf";
     private static final String KRB5_FILE_PATH = PREFIX + "krb5.file_path";
-    private static final String USE_SUBJECT_CREDS_ONLY_PROP = "javax.security.auth.useSubjectCredsOnly";
     private static final ESLogger log = Loggers.getLogger(PropertyUtil.class);
 
     private PropertyUtil() {
@@ -47,8 +46,6 @@ public class PropertyUtil {
             final Environment env = new Environment(settings);
             conf = env.configFile();
         }
-        PropertyUtil.setSystemProperty(USE_SUBJECT_CREDS_ONLY_PROP, "false");
-        //PropertyUtil.setSystemProperty(GSSUtil.USE_SUBJECT_CREDS_ONLY_PROP, "true", false); //TODO make strict
         try {
             PropertyUtil.setSystemPropertyToRelativeFile(KRB5_CONF_PROP, conf,
                     settings.get(KRB5_FILE_PATH, "/etc/krb5.conf"));
