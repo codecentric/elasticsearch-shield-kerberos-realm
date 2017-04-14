@@ -1,11 +1,10 @@
 network.host: 0.0.0.0
 
-shield.authc.realms.kerb:
-  type: cc-kerberos
+shield.authc.realms.kerberos:
+  type: kerberos
   order: 0
-  acceptor_keytab_path: /usr/share/elasticsearch/config/kerberos/krb5.keytab
   acceptor_principal: HTTP/localhost@LOCALHOST
+  files:
+    acceptor_keytab: kerberos/krb5.keytab
+    krb5_conf: kerberos/krb5.conf
   roles.admin.0: user@LOCALHOST
-
-de.codecentric.realm.cc-kerberos.krb5.file_path: /usr/share/elasticsearch/config/kerberos/krb5.conf
-de.codecentric.realm.cc-kerberos.krb_debug: true

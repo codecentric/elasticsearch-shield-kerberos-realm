@@ -33,7 +33,6 @@ import java.util.Map;
 public class LoginUsingKeytab {
 
     private static final String KRB5_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule";
-    static boolean ENABLE_DEBUG = false;
     private final KeytabConfiguration configuration;
 
     public LoginUsingKeytab(String principal, Path keytabPath) throws LoginException {
@@ -76,7 +75,6 @@ public class LoginUsingKeytab {
             options.put("isInitiator", "false");
             options.put("renewTGT", "false");
             options.put("refreshKrb5Config", "true");
-            options.put("debug", String.valueOf(ENABLE_DEBUG));
 
             return new AppConfigurationEntry[]{
                     new AppConfigurationEntry(KRB5_LOGIN_MODULE, LoginModuleControlFlag.REQUIRED, options)

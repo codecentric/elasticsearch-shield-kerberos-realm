@@ -21,7 +21,7 @@ import static de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.GS
 
 public class KerberosAuthenticator {
 
-    private static final String ACCEPTOR_KEYTAB_PATH = "acceptor_keytab_path";
+    private static final String ACCEPTOR_KEYTAB_PATH = "files.acceptor_keytab";
     private static final String ACCEPTOR_PRINCIPAL = "acceptor_principal";
 
     private final String acceptorPrincipal;
@@ -46,6 +46,24 @@ public class KerberosAuthenticator {
         if (!Files.isReadable(acceptorKeyTabPath) || Files.isDirectory(acceptorKeyTabPath)) {
             throw new ElasticsearchException("File not found or not readable: {}", acceptorKeyTabPath.toAbsolutePath());
         }
+    }
+
+    //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
+    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
+        if (gssContext.isEstablished()) {
+            GSSName gssName = null;
+            try {
+                gssName = gssContext.getSrcName();
+            } catch (final GSSException e) {
+                logger.error("Unable to get src name from gss context", e);
+            }
+
+            if (gssName != null) {
+                return gssName.toString();
+            }
+        }
+
+        return null;
     }
 
     private Subject loginUsingKeytab() {
@@ -165,24 +183,6 @@ public class KerberosAuthenticator {
                 throw (GSSException) e.getException();
             }
         }
-    }
-
-    //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
-    private static String getUsernameFromGSSContext(final GSSContext gssContext, final ESLogger logger) {
-        if (gssContext.isEstablished()) {
-            GSSName gssName = null;
-            try {
-                gssName = gssContext.getSrcName();
-            } catch (final GSSException e) {
-                logger.error("Unable to get src name from gss context", e);
-            }
-
-            if (gssName != null) {
-                return gssName.toString();
-            }
-        }
-
-        return null;
     }
 
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/

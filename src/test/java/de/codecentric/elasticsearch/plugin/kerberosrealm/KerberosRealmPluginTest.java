@@ -12,14 +12,14 @@ public class KerberosRealmPluginTest {
     public void should_return_its_name() {
         KerberosRealmPlugin realmPlugin = new KerberosRealmPlugin(Settings.EMPTY);
 
-        assertThat(realmPlugin.name(), is("cc-kerberos-realm"));
+        assertThat(realmPlugin.name(), is("kerberos-realm"));
     }
 
     @Test
     public void should_return_its_description() {
         KerberosRealmPlugin realmPlugin = new KerberosRealmPlugin(Settings.EMPTY);
 
-        assertThat(realmPlugin.description(), is("codecentric AG Kerberos V5 Realm"));
+        assertThat(realmPlugin.description(), is("Kerberos/SPNEGO Realm"));
     }
 
     @Test

@@ -44,7 +44,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_principal");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", "")
+                .put("files.acceptor_keytab", "")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
     }
@@ -55,7 +55,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_principal");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", "")
+                .put("files.acceptor_keytab", "")
                 .put("acceptor_principal", "")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
@@ -64,7 +64,7 @@ public class KerberosAuthenticatorTest {
     @Test
     public void should_throw_elasticsearch_exception_when_acceptor_keytab_path_is_missing() {
         expectedExcpetion.expect(ElasticsearchException.class);
-        expectedExcpetion.expectMessage("Unconfigured (but required) property: acceptor_keytab_path");
+        expectedExcpetion.expectMessage("Unconfigured (but required) property: files.acceptor_keytab");
 
         Settings realmSettings = Settings.builder()
                 .put("acceptor_principal", "http/test@TEST")
@@ -78,7 +78,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", "")
+                .put("files.acceptor_keytab", "")
                 .put("acceptor_principal", "http/test@TEST")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
@@ -90,7 +90,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", temporaryFolder.getRoot().getAbsolutePath())
+                .put("files.acceptor_keytab", temporaryFolder.getRoot().getAbsolutePath())
                 .put("acceptor_principal", "http/test@TEST")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
@@ -102,7 +102,7 @@ public class KerberosAuthenticatorTest {
         expectedExcpetion.expectMessage("File not found or not readable");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", temporaryFolder.getRoot().getAbsolutePath())
+                .put("files.acceptor_keytab", temporaryFolder.getRoot().getAbsolutePath())
                 .put("acceptor_principal", "http/test@TEST")
                 .build();
         new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));
@@ -118,7 +118,7 @@ public class KerberosAuthenticatorTest {
         System.setProperty("java.security.krb5.realm", "TEST");
 
         Settings realmSettings = Settings.builder()
-                .put("acceptor_keytab_path", temporaryFolder.newFile().getAbsolutePath())
+                .put("files.acceptor_keytab", temporaryFolder.newFile().getAbsolutePath())
                 .put("acceptor_principal", "http/test@TEST")
                 .build();
         KerberosAuthenticator authenticator = new KerberosAuthenticator(new RealmConfig("test", realmSettings, globalSettings));

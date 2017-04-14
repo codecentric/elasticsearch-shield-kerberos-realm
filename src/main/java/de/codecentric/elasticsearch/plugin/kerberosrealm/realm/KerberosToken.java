@@ -46,8 +46,13 @@ public class KerberosToken implements AuthenticationToken {
         return null;
     }
 
-    public static class KerberosTokenFactory {
-        public KerberosToken extractToken(String authorizationHeader) {
+    @Override
+    public String toString() {
+        return DatatypeConverter.printBase64Binary(this.token);
+    }
+
+    static class KerberosTokenFactory {
+        KerberosToken extractToken(String authorizationHeader) {
             if (authorizationHeader == null) {
                 return null;
             } else if (!authorizationHeader.trim().toLowerCase(Locale.ENGLISH).startsWith("negotiate ")) {

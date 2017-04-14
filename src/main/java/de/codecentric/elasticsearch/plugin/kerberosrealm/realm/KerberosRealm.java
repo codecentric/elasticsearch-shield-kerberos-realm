@@ -33,9 +33,8 @@ import java.util.Arrays;
 
 public class KerberosRealm extends Realm<KerberosToken> {
 
+    public static final String TYPE = "kerberos";
     private static final String HTTP_AUTHORIZATION = "Authorization";
-    public static final String TYPE = "cc-kerberos";
-
     private final RolesProvider rolesProvider;
     private final KerberosAuthenticator kerberosAuthenticator;
 
@@ -66,7 +65,7 @@ public class KerberosRealm extends Realm<KerberosToken> {
     @Override
     public KerberosToken token(TransportMessage<?> message) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Transport request headers: {}", message.getHeaders());
+            logger.debug("Transport request headers: {}", Iterators.toString(message.getHeaders().iterator()));
         }
 
         if (message instanceof LivenessRequest) {

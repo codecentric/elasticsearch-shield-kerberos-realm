@@ -1,4 +1,5 @@
 grant {
+  permission java.util.PropertyPermission "java.security.krb5.conf", "read, write";
   permission javax.security.auth.AuthPermission "doAs";
   permission javax.security.auth.AuthPermission "modifyPrincipals";
   permission javax.security.auth.AuthPermission "modifyPrivateCredentials";
