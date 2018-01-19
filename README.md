@@ -8,40 +8,40 @@ Shield Kerberos Realm
 Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.3.1.  
 Authenticate HTTP and Transport requests via Kerberos/SPNEGO.
 
-###License
+### License
 Apache License Version 2.0
 
-###Features
+### Features
 
 * Kerberos/SPNEGO REST/HTTP authentication
 * Kerberos/SPNEGO Transport authentication
 * No JAAS login.conf required
 * No external dependencies
 
-###Community support
+### Community support
 [Stackoverflow](http://stackoverflow.com/questions/ask?tags=es-kerberos+elasticsearch)  
 [Twitter @hendrikdev22](https://twitter.com/hendrikdev22)
 
-###Commercial support
+### Commercial support
 Available. Please contact [vertrieb@codecentric.de](mailto:vertrieb@codecentric.de)
 
-###Prerequisites
+### Prerequisites
 
 * Elasticsearch 2.3.1
 * Shield Plugin 2.3.1
 * Kerberos Infrastructure (ActiveDirectory, MIT, Heimdal, ...)
 
-###Install release
+### Install release
 [Download latest release](https://github.com/codecentric/elasticsearch-shield-kerberos-realm/releases) and store it somewhere. Then execute:
 
     $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.3.1.zip
 
-###Build and install latest
+### Build and install latest
     $ git clone https://github.com/codecentric/elasticsearch-shield-kerberos-realm.git
     $ mvn package
     $ bin/plugin install file:///path/to/target/release/elasticsearch-shield-kerberos-realm-2.3.1.zip
 
-###Configuration
+### Configuration
 
 Configuration is done in elasticsearch.yml
 
@@ -64,14 +64,14 @@ Configuration is done in elasticsearch.yml
 * ``security.manager.enabled`` - Must currently be set to ``false``. This will likely change with Elasticsearch 2.2, see [PR 14108](https://github.com/elastic/elasticsearch/pull/14108)
 
 
-###REST/HTTP authentication
+### REST/HTTP authentication
 
     $ kinit
     $ curl --negotiate -u : "http://localhost:9200/_logininfo?pretty"
 
 Or with a browser that supports SPNEGO like Chrome or Firefox
 
-###Transport authentication
+### Transport authentication
 
     try (TransportClient client = TransportClient.builder().settings(settings).build()) {
         client.addTransportAddress(nodes[0].getTransport().address().publishAddress());
@@ -85,25 +85,25 @@ Or with a browser that supports SPNEGO like Chrome or Firefox
             }
     }
 
-####Login with password
+#### Login with password
     KerberizedClient kc = new KerberizedClient(client,
                                             "user@REALM.COM",
                                             "secret",
                                             "HTTP/localhost@REALM.COM")
 
-####Login with (client side) keytab
+#### Login with (client side) keytab
     KerberizedClient kc = new KerberizedClient(client,
                                             Paths.get("client.keytab"),
                                             "user@REALM.COM",
                                             "HTTP/localhost@REALM.COM")
 
-####Login with TGT (Ticket)
+#### Login with TGT (Ticket)
     KerberizedClient kc = new KerberizedClient(client,
                                             "user@REALM.COM",
                                              Paths.get("ticket.cc"),
                                             "HTTP/localhost@REALM.COM")    
 
-####Login with javax.security.auth.Subject
+#### Login with javax.security.auth.Subject
     KerberizedClient kc = new KerberizedClient(client,
                                              subject,
                                             "HTTP/localhost@REALM.COM")    
