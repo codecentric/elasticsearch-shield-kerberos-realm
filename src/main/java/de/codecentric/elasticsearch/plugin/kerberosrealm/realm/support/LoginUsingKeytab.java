@@ -35,7 +35,7 @@ public class LoginUsingKeytab {
     private static final String KRB5_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule";
     private final KeytabConfiguration configuration;
 
-    public LoginUsingKeytab(String principal, Path keytabPath) throws LoginException {
+    public LoginUsingKeytab(String principal, Path keytabPath) {
         configuration = new KeytabConfiguration(principal, keytabPath);
     }
 

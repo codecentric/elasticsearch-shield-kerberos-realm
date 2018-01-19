@@ -3,15 +3,28 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.codecentric.elasticsearch.plugin.kerberosrealm</groupId>
+    <groupId>com.tngtech.elasticsearch.plugin.kerberosrealm</groupId>
     <artifactId>elasticsearch-shield-kerberos-realm</artifactId>
     <version>2.4.4</version>
     <name>Shield Kerberos V5 Realm</name>
-    <description>Shield Kerberos V5 Realm by codecentric AG</description>
+    <description>Shield Kerberos V5 Realm</description>
+    <packaging>jar</packaging>
 
     <properties>
         <elasticsearch.version>2.4.4</elasticsearch.version>
     </properties>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/robertvolkmann/elasticsearch-shield-kerberos-realm</url>
+    </scm>
 
     <repositories>
         <repository>

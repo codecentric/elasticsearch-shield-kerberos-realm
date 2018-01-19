@@ -8,6 +8,8 @@ Shield Kerberos Realm
 Kerberos/SPNEGO custom realm for Elasticsearch Shield 2.4.4.  
 Authenticate HTTP and Transport requests via Kerberos/SPNEGO.
 
+Approved fork of https://github.com/codecentric/elasticsearch-shield-kerberos-realm.
+
 ### License
 Apache License Version 2.0
 
