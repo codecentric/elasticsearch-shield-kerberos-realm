@@ -17,13 +17,12 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm.realm;
 
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.support.PropertyUtil;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.shield.ShieldSettingsFilter;
 import org.elasticsearch.shield.authc.Realm;
 import org.elasticsearch.shield.authc.RealmConfig;
 
-/**
- */
 public class KerberosRealmFactory extends Realm.Factory<KerberosRealm> {
 
     private final ShieldSettingsFilter settingsFilter;
@@ -37,7 +36,8 @@ public class KerberosRealmFactory extends Realm.Factory<KerberosRealm> {
     @Override
     public KerberosRealm create(final RealmConfig config) {
         settingsFilter.filterOut("shield.authc.realms." + config.name() + ".*");
-        return new KerberosRealm(config);
+        new PropertyUtil(config).initKerberosProperty();
+        return new KerberosRealm(config, new KerberosAuthenticator(config), new RolesProvider(config));
     }
 
     @Override

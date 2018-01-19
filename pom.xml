@@ -1,45 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>org.elasticsearch.plugin</groupId>
-        <artifactId>plugins</artifactId>
-        <version>2.3.1</version>
-    </parent>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>com.tngtech.elasticsearch.plugin.kerberosrealm</groupId>
     <artifactId>elasticsearch-shield-kerberos-realm</artifactId>
+    <version>2.4.4</version>
     <name>Shield Kerberos V5 Realm</name>
-    <description>Shield Kerberos V5 Realm by codecentric AG</description>
+    <description>Shield Kerberos V5 Realm</description>
+    <packaging>jar</packaging>
 
     <properties>
-        <!-- define the plugin classname so it can be put in the descriptor -->
-        <elasticsearch.plugin.classname>de.codecentric.elasticsearch.plugin.kerberosrealm.KerberosRealmPlugin</elasticsearch.plugin.classname>
-        <!-- this plugin cannot be isolated since it needs to directly interact
-            with Shield -->
-        <elasticsearch.plugin.isolated>false</elasticsearch.plugin.isolated>
-
-        <!-- define the location and information for the integration tests
-            run as part of the verify phase -->
-        <elasticsearch.integ.antfile>${project.basedir}/integration-tests.xml</elasticsearch.integ.antfile>
-        <plugins.list>license,shield,elasticsearch-shield-kerberos-realm</plugins.list>
-        <xlint.options>-Xlint:-rawtypes</xlint.options>
-        <skip.integ.tests>true</skip.integ.tests>
+        <elasticsearch.version>2.4.4</elasticsearch.version>
     </properties>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/robertvolkmann/elasticsearch-shield-kerberos-realm</url>
+    </scm>
+
     <repositories>
-        <repository>
-            <id>oss-snapshots</id>
-            <name>Sonatype OSS Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
         <repository>
             <id>elasticsearch-releases</id>
             <url>http://maven.elasticsearch.org/releases</url>
@@ -51,203 +38,292 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>jspresso.org</id>
-            <url>http://repository.jspresso.org/maven2/</url>
-        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch</artifactId>
-            <version>${project.version}</version>
+            <version>${elasticsearch.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch.plugin</groupId>
             <artifactId>shield</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsearch.plugin</groupId>
-            <artifactId>license</artifactId>
             <version>${elasticsearch.version}</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- Test deps only -->
-
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>fluent-hc</artifactId>
-            <version>4.5.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.1</version>
-            <scope>test</scope>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.kerby</groupId>
-            <artifactId>kerb-simplekdc</artifactId>
-            <version>1.0.0-RC1</version>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+            <version>1.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.kerby</groupId>
-            <artifactId>kerby-kdc</artifactId>
-            <version>1.0.0-RC1</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.7.21</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.spnego</groupId>
+            <groupId>org.codelibs</groupId>
             <artifactId>spnego</artifactId>
-            <version>7.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.12</version>
+            <version>1.0.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>*.policy</exclude>
+                    <exclude>*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>integ-setup-dependencies</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skip.integ.tests}</skip>
-                            <useBaseVersion>true</useBaseVersion>
-                            <outputDirectory>${integ.deps}/plugins</outputDirectory>
-
-                            <artifactItems>
-                                <!-- elasticsearch distribution -->
-                                <artifactItem>
-                                    <groupId>org.elasticsearch.distribution.zip</groupId>
-                                    <artifactId>elasticsearch</artifactId>
-                                    <version>${elasticsearch.version}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${integ.deps}</outputDirectory>
-                                </artifactItem>
-
-                                <!-- commercial plugins -->
-                                <artifactItem>
-                                    <groupId>org.elasticsearch.plugin</groupId>
-                                    <artifactId>license</artifactId>
-                                    <version>${elasticsearch.version}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                </artifactItem>
-
-                                <artifactItem>
-                                    <groupId>org.elasticsearch.plugin</groupId>
-                                    <artifactId>shield</artifactId>
-                                    <version>${elasticsearch.version}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                </artifactItem>
-
-                                <!-- this project's zip -->
-                                <artifactItem>
-                                    <groupId>${project.groupId}</groupId>
-                                    <artifactId>${project.artifactId}</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>check-license</id>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>ant-contrib</groupId>
-                        <artifactId>ant-contrib</artifactId>
-                        <version>1.0b3</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>ant</groupId>
-                                <artifactId>ant</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.ant</groupId>
-                        <artifactId>ant-nodeps</artifactId>
-                        <version>1.8.1</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
+                <version>2.6</version>
                 <configuration>
-                    <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
-                    <properties>
-                    </properties>
-                    <excludes>
-                        <exclude>**/*</exclude>
-                    </excludes>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <outputDirectory>${project.build.directory}/releases/</outputDirectory>
+                    <descriptors>
+                        <descriptor>${basedir}/src/main/assemblies/plugin.xml</descriptor>
+                    </descriptors>
                 </configuration>
                 <executions>
                     <execution>
+                        <phase>package</phase>
                         <goals>
-                            <goal>check</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.eluder.coveralls</groupId>
-                <artifactId>coveralls-maven-plugin</artifactId>
-                <version>4.1.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <phase>test</phase>
+                        <configuration>
+                            <tasks>
+                                <touch file="${project.build.directory}/jacoco-it.exec"/>
+                                <chmod file="${project.build.directory}/jacoco-it.exec" perm="777"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.20.0</version>
+                <configuration>
+                    <images>
+                        <image>
+                            <name>alpine:kdc</name>
+                            <build>
+                                <from>alpine:3.5</from>
+                                <runCmds>
+                                    <run>apk add --no-cache krb5-server</run>
+                                    <run>kdb5_util -P masterkey -r LOCALHOST create -s</run>
+                                    <run>kadmin.local -r LOCALHOST -q "addprinc -pw password HTTP/localhost@LOCALHOST"</run>
+                                    <run>kadmin.local -r LOCALHOST -q "addprinc -pw password user@LOCALHOST"</run>
+                                </runCmds>
+                                <entryPoint>syslogd &amp;&amp; krb5kdc -r LOCALHOST &amp;&amp; tail -F /var/log/messages</entryPoint>
+                            </build>
+                            <run>
+                                <ports>
+                                    <port>${kdc.host}:88:88/udp</port>
+                                </ports>
+                            </run>
+                        </image>
+                        <image>
+                            <name>elasticsearch:2.4.4-kerberos</name>
+                            <build>
+                                <from>elasticsearch:2.4.4-alpine</from>
+                                <assembly>
+                                    <descriptor>plugin.xml</descriptor>
+                                    <targetDir>/usr/share/elasticsearch/plugins/elasticsearch-shield-kerberos-realm
+                                    </targetDir>
+                                </assembly>
+                                <runCmds>
+                                    <run>bin/plugin install --batch license</run>
+                                    <run>bin/plugin install --batch shield</run>
+                                </runCmds>
+                                <optimise>false</optimise>
+                            </build>
+                            <run>
+                                <ports>
+                                    <port>${elasticsearch.host}:${elasticsearch.rest-port}:9200</port>
+                                    <port>${elasticsearch.host}:${elasticsearch.transport-port}:9300</port>
+                                </ports>
+                                <volumes>
+                                    <bind>
+                                        <volume>
+                                            ${project.basedir}/src/test/resources/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+                                        </volume>
+                                        <volume>
+                                            ${project.basedir}/src/test/resources/kerberos:/usr/share/elasticsearch/config/kerberos
+                                        </volume>
+                                        <volume>
+                                            ${project.basedir}/jacocoagent.jar:/jacocoagent.jar
+                                        </volume>
+                                        <volume>
+                                            ${project.build.directory}/jacoco-it.exec:/tmp/jacoco-it.exec
+                                        </volume>
+                                    </bind>
+                                </volumes>
+                                <wait>
+                                    <log>started</log>
+                                    <time>20000</time>
+                                    <kill>5000</kill>
+                                </wait>
+                                <env>
+                                    <ES_JAVA_OPTS>-javaagent:/jacocoagent.jar=destfile=/tmp/jacoco-it.exec
+                                    </ES_JAVA_OPTS>
+                                </env>
+                            </run>
+                        </image>
+                    </images>
+                    <sourceDirectory>src/main/assemblies</sourceDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>start</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <argLine>${surefireArgLine}</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <skip>false</skip>
+                    <systemPropertyVariables>
+                        <elasticsearch.rest.url>http://${elasticsearch.host}:${elasticsearch.rest-port}</elasticsearch.rest.url>
+                        <elasticsearch.host>${elasticsearch.host}</elasticsearch.host>
+                        <elasticsearch.transport.port>${elasticsearch.transport-port}</elasticsearch.transport.port>
+                        <java.security.krb5.realm>LOCALHOST</java.security.krb5.realm>
+                        <java.security.krb5.kdc>${kdc.host}:88</java.security.krb5.kdc>
+                        <java.security.auth.login.config>${project.basedir}/src/test/resources/login.conf</java.security.auth.login.config>
+                        <krb5.conf>${project.basedir}/src/test/resources/kerberos/krb5.conf</krb5.conf>
+                    </systemPropertyVariables>
+                    <failIfNoTests>true</failIfNoTests>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.9</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <propertyName>surefireArgLine</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>merge-results</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.build.directory}/aggregate.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/aggregate.exec</dataFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

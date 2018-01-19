@@ -1,9 +1,16 @@
 language: java
-sudo: true
+sudo: required
+
+install: true
 
 jdk:
   - oraclejdk7
   - oraclejdk8
 
+script: mvn clean verify -Ddocker.showLogs -B
+
+services:
+  - docker
+
 after_success:
-  - mvn clean test jacoco:report coveralls:report -Pcoverage -Dmaven.build.timestamp.format=yyMMddHHmm
+  - bash <(curl -s https://codecov.io/bash)

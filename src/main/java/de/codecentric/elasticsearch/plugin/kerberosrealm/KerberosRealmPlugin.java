@@ -17,33 +17,22 @@
  */
 package de.codecentric.elasticsearch.plugin.kerberosrealm;
 
-import java.nio.file.Paths;
-
-import org.elasticsearch.common.SuppressForbidden;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
+import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.Plugin;
-import org.elasticsearch.rest.RestModule;
 import org.elasticsearch.shield.authc.AuthenticationModule;
 
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosAuthenticationFailureHandler;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealm;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.realm.KerberosRealmFactory;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.rest.LoginInfoRestAction;
-import de.codecentric.elasticsearch.plugin.kerberosrealm.support.PropertyUtil;
-
-/**
- */
 public class KerberosRealmPlugin extends Plugin {
 
-    protected final ESLogger logger = Loggers.getLogger(this.getClass());
     private static final String CLIENT_TYPE = "client.type";
+    private final ESLogger logger = Loggers.getLogger(this.getClass());
     private final boolean client;
-    private final Settings settings;
 
-    public KerberosRealmPlugin(final Settings settings) {
-        this.settings = settings;
+    public KerberosRealmPlugin(Settings settings) {
         client = !"node".equals(settings.get(CLIENT_TYPE, "node"));
         logger.info("Start Kerberos Realm Plugin (mode: {})", settings.get(CLIENT_TYPE));
     }
@@ -55,19 +44,11 @@ public class KerberosRealmPlugin extends Plugin {
 
     @Override
     public String description() {
-        return "codecentric AG Kerberos V5 Realm";
-    }
-    
-    public void onModule(final RestModule module) {
-        if (!client) {
-            module.addRestAction(LoginInfoRestAction.class);
-        }
+        return "Kerberos/SPNEGO Realm";
     }
 
-    @SuppressForbidden(reason = "proper use of Paths.get()")
-    public void onModule(final AuthenticationModule authenticationModule) {
+    public void onModule(AuthenticationModule authenticationModule) {
         if (!client) {
-            PropertyUtil.initKerberosProps(settings, Paths.get("/"));
             authenticationModule.addCustomRealm(KerberosRealm.TYPE, KerberosRealmFactory.class);
             authenticationModule.setAuthenticationFailureHandler(KerberosAuthenticationFailureHandler.class);
         } else {

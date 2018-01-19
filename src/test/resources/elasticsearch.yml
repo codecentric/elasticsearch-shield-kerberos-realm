@@ -1,0 +1,10 @@
+network.host: 0.0.0.0
+
+shield.authc.realms.kerberos:
+  type: kerberos
+  order: 0
+  acceptor_principal: HTTP/localhost@LOCALHOST
+  files:
+    acceptor_keytab: kerberos/krb5.keytab
+    krb5_conf: kerberos/krb5.conf
+  roles.admin.0: user@LOCALHOST
