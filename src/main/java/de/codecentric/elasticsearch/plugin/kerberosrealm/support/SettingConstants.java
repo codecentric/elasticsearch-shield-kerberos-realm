@@ -30,6 +30,17 @@ public class SettingConstants {
 
     public static final String KRB_DEBUG = PREFIX + "krb_debug";
     public static final String KRB5_FILE_PATH = PREFIX + "krb5.file_path";
+    
+    public static final String LDAP_URL = "ldap_url";
+    public static final String LDAP_DOMAIN = "ldap_domain";
+    public static final String LDAP_GROUP_BASE = "ldap_group_base";
+    public static final String LDAP_USER = "ldap_user";
+    public static final String LDAP_PASSWORD = "ldap_password";
+    
+    public static final String KEYSTORE_PATH = "shield.ssl.keystore.path";
+    public static final String KEYSTORE_PASSWORD = "shield.ssl.keystore.password";
+    
+            
 
     private SettingConstants() {
 

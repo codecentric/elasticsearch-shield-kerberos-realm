@@ -26,11 +26,20 @@ import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.naming.Context;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 import javax.xml.bind.DatatypeConverter;
@@ -71,9 +80,20 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     private final boolean stripRealmFromPrincipalName;
     private final String acceptorPrincipal;
     private final Path acceptorKeyTabPath;
+    private final String keyStorePath;
+    private final String keyStorePassword;
+    // maps principal string to shield role
     private final ListMultimap<String, String> rolesMap = ArrayListMultimap.<String, String> create();
+    // maps group string to shield role
+    private final ListMultimap<String, String> groupMap = ArrayListMultimap.<String, String> create();
     private final Environment env;
     private final boolean mockMode;
+    
+    private final String ldapConnectionString;
+    private final String ldapDomain;
+    private final String ldapUser;
+    private final String ldapPassword;
+    private final String ldapGroupBase;
 
     public KerberosRealm(final RealmConfig config) {
         super(TYPE, config);
@@ -81,23 +101,46 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
         acceptorPrincipal = config.settings().get(SettingConstants.ACCEPTOR_PRINCIPAL, null);
         final String acceptorKeyTab = config.settings().get(SettingConstants.ACCEPTOR_KEYTAB_PATH, null);
         
+        ldapConnectionString = config.settings().get(SettingConstants.LDAP_URL);
+        ldapDomain = config.settings().get(SettingConstants.LDAP_DOMAIN);
+        ldapGroupBase = config.settings().get(SettingConstants.LDAP_GROUP_BASE);
+        ldapUser = config.settings().get(SettingConstants.LDAP_USER, null);
+        ldapPassword = config.settings().get(SettingConstants.LDAP_PASSWORD, null);
+        
+        logger.debug("ldapDomain Path: {}", ldapDomain);
+        logger.debug("ldapGroupBase: {}", ldapGroupBase);
+        logger.debug("ldapConnectionString: {}", ldapConnectionString);
+        
+        
+        keyStorePath = config.globalSettings().get(SettingConstants.KEYSTORE_PATH, null);
+        keyStorePassword = config.globalSettings().get(SettingConstants.KEYSTORE_PASSWORD, null);
+                
+        logger.debug("KeyStore Path: {}", keyStorePath);
+        
+        
         //shield.authc.realms.cc-kerberos.roles.<role1>: principal1, principal2
         //shield.authc.realms.cc-kerberos.roles.<role2>: principal1, principal3
         ////shield.authc.realms.cc-kerberos.roles.admin: luke@EXAMPLE.COM, vader@EXAMPLE.COM
-        
+
         Map<String, Settings> roleGroups = config.settings().getGroups(SettingConstants.ROLES+".");
-        
+
         if(roleGroups != null) {
             for(String roleGroup:roleGroups.keySet()) {
-                
-                for(String principal:config.settings().getAsArray(SettingConstants.ROLES+"."+roleGroup)) {
-                    rolesMap.put(stripRealmName(principal, stripRealmFromPrincipalName), roleGroup);
+
+                for(String principalOrGroup:config.settings().getAsArray(SettingConstants.ROLES+"."+roleGroup)) {
+                    String groupSid = null;
+                    if((groupSid = getSidFromGroupName(principalOrGroup)) != null){
+                        groupMap.put(principalOrGroup, roleGroup);
+                        logger.debug("Found group {}:{}", principalOrGroup, groupSid);
+                    } else {
+                        rolesMap.put(stripRealmName(principalOrGroup, stripRealmFromPrincipalName), roleGroup);
+                    }
                 }
             }
-        }
-        
+        }       
+
         logger.debug("Parsed roles: {}", rolesMap);
-        
+
         env = new Environment(config.globalSettings());
         mockMode = config.settings().getAsBoolean("mock_mode", false);
 
@@ -107,6 +150,14 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
         if (acceptorKeyTab == null) {
             throw new ElasticsearchException("Unconfigured (but required) property: {}", SettingConstants.ACCEPTOR_KEYTAB_PATH);
+        }
+        
+        if (keyStorePath == null) {
+            throw new ElasticsearchException("Unconfigured (but required) property: {}", SettingConstants.KEYSTORE_PATH);
+        }
+        
+        if (keyStorePassword == null) {
+            throw new ElasticsearchException("Unconfigured (but required) property: {}", SettingConstants.KEYSTORE_PASSWORD);
         }
 
         acceptorKeyTabPath = env.configFile().resolve(acceptorKeyTab);
@@ -119,6 +170,157 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
     /*protected KerberosRealm(final String type, final RealmConfig config) {
         this(config);
     }*/
+
+    /*
+     * The binary data is in the form:
+     * byte[0] - revision level
+     * byte[1] - count of sub-authorities
+     * byte[2-7] - 48 bit authority (big-endian)
+     * and then count x 32 bit sub authorities (little-endian)
+     * 
+     * The String value is: S-Revision-Authority-SubAuthority[n]...
+     * 
+     * Based on code from here - http://forums.oracle.com/forums/thread.jspa?threadID=1155740&tstart=0
+     */
+    public static String decodeSID(byte[] sid) {
+    
+        final StringBuilder strSid = new StringBuilder("S-");
+    
+        // get version
+        final int revision = sid[0];
+        strSid.append(Integer.toString(revision));
+    
+        //next byte is the count of sub-authorities
+        final int countSubAuths = sid[1] & 0xFF;
+    
+        //get the authority
+        long authority = 0;
+        //String rid = "";
+        for(int i = 2; i <= 7; i++) {
+            authority |= ((long)sid[i]) << (8 * (5 - (i - 2)));
+        }
+        strSid.append("-");
+        strSid.append(Long.toHexString(authority));
+    
+        //iterate all the sub-auths
+        int offset = 8;
+        int size = 4; //4 bytes for each sub auth
+        for(int j = 0; j < countSubAuths; j++) {
+            long subAuthority = 0;
+            for(int k = 0; k < size; k++) {
+                subAuthority |= (long)(sid[offset + k] & 0xFF) << (8 * k);
+            }
+    
+            strSid.append("-");
+            strSid.append(subAuthority);
+    
+            offset += size;
+        }
+    
+        return strSid.toString();    
+    }
+
+    private boolean isInRole(String group, String principal){
+        String query = "(&(objectClass=user)(sAMAccountName=" + principal + ")(memberOf:1.2.840.113556.1.4.1941:=CN=" + group + "," + ldapGroupBase + "))";
+        NamingEnumeration<SearchResult> results = queryLdap(query);
+        try{
+            return results.hasMoreElements();
+        }catch(Exception e){
+            return false;
+        }
+    }
+    
+    private NamingEnumeration<SearchResult> queryLdap(String query){
+        Hashtable<String, Object> env = new Hashtable<String, Object>(11);
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put("java.naming.ldap.factory.socket", TrustAllSSLSocketFactory.class.getName());
+        env.put("javax.net.ssl.keyStore", this.keyStorePath);
+        env.put("javax.net.ssl.keyStorePassword", this.keyStorePassword);
+        
+        if(ldapUser != null && ldapPassword != null){
+            env.put(Context.SECURITY_AUTHENTICATION, "simple");
+            env.put(Context.SECURITY_PRINCIPAL, ldapUser);
+            env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
+            logger.debug("Connecting to LDAP with username: {}", ldapUser);
+        }else{
+            env.put(Context.SECURITY_AUTHENTICATION, "none");
+            logger.debug("Attempting anonymous bind");
+        }
+        
+        env.put(Context.PROVIDER_URL, ldapConnectionString);
+        env.put("java.naming.ldap.attributes.binary", "objectSID");
+        
+        List<String> formatedDomain = new ArrayList<String>();
+        for(String dc:(ldapDomain.split("\\."))){
+           formatedDomain.add("DC=" + dc + ",");
+        }
+        String searchBase = "";
+        for(int i = 0; i < formatedDomain.size(); i++){
+           searchBase +=  formatedDomain.get(i);
+        }
+        searchBase = searchBase.substring(0,  searchBase.length()-1);
+        logger.debug("Search base {}", searchBase);
+        
+        // Grab the current classloader to restore after loading custom sockets in JNDI context
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    
+        DirContext ctx = null;
+        try {
+            
+            Thread.currentThread().setContextClassLoader(TrustAllSSLSocketFactory.class.getClassLoader());
+            // Create initial context
+            ctx = new InitialDirContext(env);
+            
+    
+            SearchControls searchControls = new SearchControls();
+            searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+    
+            NamingEnumeration<SearchResult> results = ctx.search(searchBase, query, searchControls);
+            return results;
+    
+        } catch (NamingException e) {
+            logger.error("Could not connect to LDAP with provided method", e);
+        } finally {
+            if(ctx != null){
+                try {
+                    ctx.close();
+                } catch (NamingException e) {
+                    // pass
+                }
+            }
+            Thread.currentThread().setContextClassLoader(cl);
+        }
+        return null;
+    }
+    
+    private SearchResult queryLdapForGroup(String group){
+        String query = "(&(objectClass=group)(cn=" + group + "))";
+        NamingEnumeration<SearchResult> result = queryLdap(query);
+        if(result != null){
+            try{
+                return result.nextElement();
+            }catch (Exception e){
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+    
+    private String getSidFromGroupName(String groupName){
+        try {
+            SearchResult searchResult = queryLdapForGroup(groupName);    
+            if(searchResult != null) {                
+                byte[] sidbytes = null;
+                sidbytes = (byte[])searchResult.getAttributes().get("objectSid").get();
+                String sid = decodeSID(sidbytes);
+                return sid;
+            }
+        } catch (NamingException e) {
+            logger.error("Error retrieving sid from group name '{}' : {}", groupName,e);
+        }
+        return null;
+    }
 
     @Override
     public boolean supports(final AuthenticationToken token) {
@@ -173,6 +375,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
     private KerberosAuthenticationToken tokenKerb(final String authorizationHeader) {
         Principal principal = null;
+        List<String> groups = null;
 
         if (authorizationHeader != null && acceptorKeyTabPath != null && acceptorPrincipal != null) {
 
@@ -209,6 +412,14 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
                     principal = Subject.doAs(subject, new AuthenticateAction(logger, gssContext, stripRealmFromPrincipalName));
 
+                    // find any groups with ldap
+                    groups = new ArrayList<String>();
+                    for(String group:groupMap.keys()){
+                        if(!groups.contains(group) && isInRole(group, principal.getName())){
+                            logger.debug("User {} in LDAP group {}", principal.getName(), group);
+                            groups.add(group);
+                        }
+                    }
                 } catch (final LoginException e) {
                     logger.error("Login exception due to {}", e, e.toString());
                     throw ExceptionsHelper.convertToRuntime(e);
@@ -241,7 +452,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
                 }
 
                 final String username = ((SimpleUserPrincipal) principal).getName();
-                return new KerberosAuthenticationToken(outToken, username);
+                return new KerberosAuthenticationToken(outToken, username, groups);
             }
 
         } else {
@@ -270,12 +481,13 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
     @Override
     public User authenticate(final KerberosAuthenticationToken token) {
-        
+
         if(token == KerberosAuthenticationToken.LIVENESS_TOKEN) {
             return InternalSystemUser.INSTANCE;
         }
-        
+
         final String actualUser = token.principal();
+        final List<String> actualGroups = token.groups();
 
         if (actualUser == null || actualUser.isEmpty() || token.credentials() == null) {
             logger.warn("User '{}' cannot be authenticated", actualUser);
@@ -284,7 +496,21 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
         String[] userRoles = new String[0];
         List<String> userRolesList = rolesMap.get(actualUser);
-
+        
+              
+        if(actualGroups != null){                
+            for(String group: actualGroups){
+                if(groupMap.containsKey(group)){
+                    for(String role:groupMap.get(group)){
+                        if(!userRolesList.contains(role)){
+                            userRolesList.add(role);
+                        }
+                    }
+                    logger.debug("User '{}' found in AD group {} mapping to shield role {}", actualUser, group, Arrays.toString(groupMap.get(group).toArray(new String[0])));
+                }
+            }
+        }
+        
         if(userRolesList != null && !userRolesList.isEmpty()) {
             userRoles = userRolesList.toArray(new String[0]);
         }
@@ -364,7 +590,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
 
         return null;
     }
-    
+
     private static String stripRealmName(String name, boolean strip){
         if (strip && name != null) {
             final int i = name.indexOf('@');
@@ -373,7 +599,7 @@ public class KerberosRealm extends Realm<KerberosAuthenticationToken> {
                 name = name.substring(0, i);
             }
         }
-        
+
         return name;
     }
 
